@@ -1,4 +1,4 @@
-# Katana Slice Manager
+# Katana Slice Manager Upadted
 
 ![Katana Logo](./templates/images/katana-logo.svg)
 
