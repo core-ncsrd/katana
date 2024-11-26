@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ns": {
+      "type": "object",
+      "description": "A Network Service",
+      "properties": {
+        "nsd-id": {
+          "type": "string",
+          "description": "The NSD id as defined on the NFVO"
+        },
+        "ns-name": {
+          "type": "string",
+          "description": "The name of the NS"
+        },
+        "placement": {
+          "type": "number",
+          "enum": [
+            0,
+            1
+          ],
+          "description": "1: Core, 2: Edge"
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pnf": {
+      "type": "object",
+      "description": "A Physical Network Service",
+      "properties": {
+        "pnf-id": {
+          "type": "string",
+          "description": "A Unique ID of the pnf"
+        },
+        "pnf-name": {
+          "type": "string",
+          "description": "The name of the PNF"
+        },
+        "description": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string",
+          "description": "The management IP of the PNF"
+        },
+        "ip_s1": {
+          "type": "string",
+          "description": "Optional - The IP of the S1 Interface"
+        },
+        "location": {
+          "type": "string",
+          "description": "The location of the PNF"
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "description": "A core slice network function",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "A unique ID for this network function"
+    },
+    "name": {
+      "type": "string",
+      "description": "Optional name for the network function"
+    },
+    "gen": {
+      "type": "number",
+      "enum": [
+        4,
+        5
+      ],
+      "description": "Type of the network function - 4: 4G, 5: 5G"
+    },
+    "func": {
+      "type": "number",
+      "enum": [
+        0,
+        1
+      ],
+      "description": "0: Core, 1: Radio"
+    },
+    "shared": {
+      "type": "object",
+      "description": "Defines if the function can be shared between different slices",
+      "properties": {
+        "availability": {
+          "type": "boolean",
+          "description": "true: shared, false: no shared"
+        },
+        "max_shared": {
+          "type": "number",
+          "description": "Max number of slices - If availability is true and max_shared not defined, it will be assumed unlimited availability"
+        }
+      },
+      "required": [
+        "availability"
+      ]
+    },
+    "type": {
+      "type": "number",
+      "enum": [
+        0,
+        1
+      ],
+      "description": "0: Virtual, 1: Physical"
+    },
+    "location": {
+      "type": "string",
+      "description": "Supported location"
+    },
+    "ns_list": {
+      "type": "array",
+      "description": "Conditional - If type == Virtual - A list of the NSs that will be part of the slice",
+      "items": {
+        "$ref": "#/definitions/ns"
+      }
+    },
+    "pnf_list": {
+      "type": "array",
+      "description": "Conditional - If type == Physical - A list of the PNFs that will be part of the slice",
+      "items": {
+        "$ref": "#/definitions/pnf"
+      }
+    },
+    "ems-id": {
+      "type": "string",
+      "description": "Optional - Defines the EMS that is responsible for D1&2 configuration"
+    }
+  },
+  "required": [
+    "id",
+    "gen",
+    "func",
+    "shared",
+    "type",
+    "location"
+  ]
+}

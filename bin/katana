@@ -1,0 +1,45 @@
+#!/bin/bash
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+dock_copy=false
+
+case $key in
+    -f|--file)
+    FILE="$2"
+    POSITIONAL+=($1) # save it in an array for later
+    shift # past argument
+    shift # past value
+    dock_copy=true
+    ;;
+    logs)
+    if [[ $2 == "-l" ]] || [[ $2 == "--limit" ]];
+    then
+    limit=$3
+    else
+    limit="all"
+    fi
+    printf "\n\t\t\t%s\n\t\t\t%s\n\t\t\t%s\n" "+----------------------------+" "|      katana-mngr logs      |" "+----------------------------+"
+    docker logs --tail $limit katana-mngr
+    printf "\n\t\t\t%s\n\t\t\t%s\n\t\t\t%s\n" "+---------------------------+" "|      katana-nbi logs      |" "+---------------------------+"
+    docker logs --tail $limit katana-nbi
+    printf "\n"
+    exit 0
+    ;;
+    *)    # unknown option
+    POSITIONAL+=($1) # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [ "$dock_copy" = true ]; then
+    docker cp "${FILE}" katana-cli:/katana-cli/"$file_name"
+    file_name=${FILE##*/}
+    docker container exec -it katana-cli katana "${POSITIONAL[@]}" "$file_name"
+else
+    docker container exec -it katana-cli katana "${POSITIONAL[@]}"
+fi  

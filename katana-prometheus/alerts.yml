@@ -1,0 +1,5 @@
+groups:
+  - name: BuiltInAlets
+    rules:
+      - alert: NSFailing
+        expr: (ns_status == 2 OR ns_status == 3) AND ON(slice_id) katana_status != 12

@@ -1,0 +1,9 @@
+README.md
+setup.py
+sct/__init__.py
+sct/sct
+sct.egg-info/PKG-INFO
+sct.egg-info/SOURCES.txt
+sct.egg-info/dependency_links.txt
+sct.egg-info/requires.txt
+sct.egg-info/top_level.txt

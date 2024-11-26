@@ -1,0 +1,6 @@
+{
+  "id": "test_policy1",
+  "description": "Test Policy Management System for debugging",
+  "url": "URL",
+  "type": "test-policy"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "minilab_vim",
+  "name": "minilab_vim",
+  "auth_url": "http://IP_ADDRESS:5000/v3/",
+  "username": "******",
+  "password": "******",
+  "admin_project_name": "******",
+  "location": "Minilab",
+  "type": "openstack",
+  "version": "Queens",
+  "description": "Edge VIM - IoRL/Minilab",
+  "config": {
+    "security_groups": "TBD"
+  }
+}

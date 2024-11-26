@@ -1,0 +1,108 @@
+{
+	"engineServiceParameters": {
+		"name": "APEX-Engine",
+		"version": "0.0.1",
+		"id": 45,
+		"instanceCount": 4,
+		"deploymentPort": 12345,
+		"policyModelFileName": "policy-json/Policy.json",
+		"engineParameters": {
+			"executorParameters": {
+				"JAVASCRIPT": {
+					"parameterClassName": "org.onap.policy.apex.plugins.executor.javascript.JavascriptExecutorParameters"
+				}
+			}
+		}
+	},
+	"eventInputParameters": {
+		"aConsumer": {
+			"carrierTechnologyParameters": {
+				"carrierTechnology": "KAFKA",
+				"parameterClassName": "org.onap.policy.apex.plugins.event.carrier.kafka.KafkaCarrierTechnologyParameters",
+				"parameters": {
+					"bootstrapServers": "katana-kafka:19092",
+					"groupId": "apex-group-id",
+					"enableAutoCommit": true,
+					"autoCommitTime": 1000,
+					"sessionTimeout": 30000,
+					"consumerPollTime": 100,
+					"consumerTopicList": [
+						"apex-in-0",
+						"apex-in-1"
+					],
+					"keyDeserializer": "org.apache.kafka.common.serialization.StringDeserializer",
+					"valueDeserializer": "org.apache.kafka.common.serialization.StringDeserializer"
+				}
+			},
+			"eventProtocolParameters": {
+				"eventProtocol": "JSON"
+			}
+		},
+		"RestServerConsumer": {
+			"carrierTechnologyParameters": {
+				"carrierTechnology": "RESTSERVER",
+				"parameterClassName": "org.onap.policy.apex.plugins.event.carrier.restserver.RestServerCarrierTechnologyParameters",
+				"parameters": {
+					"standalone": true,
+					"host": "0.0.0.0",
+					"port": 23324
+				}
+			},
+			"eventProtocolParameters": {
+				"eventProtocol": "JSON"
+			},
+			"synchronousMode": true,
+			"synchronousPeer": "RestServerProducer",
+			"synchronousTimeout": 1000
+		}
+	},
+	"eventOutputParameters": {
+		"IOProducer": {
+			"carrierTechnologyParameters": {
+				"carrierTechnology": "FILE",
+				"parameters": {
+					"standardIo": true
+				}
+			},
+			"eventProtocolParameters": {
+				"eventProtocol": "JSON"
+			}
+		},
+		"RestServerProducer": {
+			"carrierTechnologyParameters": {
+				"carrierTechnology": "RESTSERVER",
+				"parameterClassName": "org.onap.policy.apex.plugins.event.carrier.restserver.RestServerCarrierTechnologyParameters"
+			},
+			"eventProtocolParameters": {
+				"eventProtocol": "JSON"
+			},
+			"synchronousMode": true,
+			"synchronousPeer": "RestServerConsumer",
+			"synchronousTimeout": 1000
+		},
+		"APEX2SMRestClientProducer": {
+			"carrierTechnologyParameters": {
+				"carrierTechnology": "RESTCLIENT",
+				"parameterClassName": "org.onap.policy.apex.plugins.event.carrier.restclient.RestClientCarrierTechnologyParameters",
+				"parameters": {
+					"url": "http://katana-nbi:8000/api/policy/apex/action",
+					"httpMethod": "POST",
+					"httpHeaders": [
+						[
+							"Keep-Alive",
+							"300"
+						],
+						[
+							"Cache-Control",
+							"no-cache"
+						]
+					]
+				}
+			},
+			"eventProtocolParameters": {
+				"eventProtocol": "JSON"
+			},
+			"eventNameFilter": "APEX_Wrapped_Event"
+		}
+	}
+}

@@ -1,0 +1,27 @@
+pipeline {
+    agent {
+        node {
+            label "${prod_server}"
+        }
+    }
+
+    stages {
+        // ******************************
+        // *** Kill Katana Containers ***
+        // ******************************
+        stage("kill_katana_containers") {
+            steps{
+                sh 'docker container rm -f $(docker ps --filter "name=katana" -q)'
+            }
+        }
+
+        // *****************************
+        // *** Remove Katana Volumes ***
+        // *****************************
+        stage("remove_katana_volumes") {
+            steps{
+                sh 'docker volume rm $(docker volume ls --filter name=katana -q)'
+            }
+        }
+    }
+}

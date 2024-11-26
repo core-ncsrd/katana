@@ -1,0 +1,16 @@
+{
+  "id": "vim_core2",
+  "name": "vim_Core2",
+  "auth_url": "http://10.160.101.246:5000/v3/",
+  "username": "admin",
+  "password": "XdTi5awxKgaNn4izxu3MNB9foKzOIxfXiHSgN3y4",
+  "admin_project_name": "admin",
+  "location": "core",
+  "type": "openstack",
+  "version": "2024.1/stable",
+  "description": "Group 0 VIM",
+  "infrastructure_monitoring": "idfk",
+  "config": {
+    "security_groups": "TBA"
+  }
+}

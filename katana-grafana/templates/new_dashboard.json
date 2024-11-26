@@ -1,0 +1,56 @@
+{
+    "meta": {
+        "type": "db",
+        "canSave": true,
+        "canEdit": true,
+        "canAdmin": true,
+        "canStar": true,
+        "version": 1,
+        "hasAcl": false,
+        "isFolder": false,
+        "folderId": 0,
+        "folderTitle": "General",
+        "folderUrl": "",
+        "provisioned": false,
+        "provisionedExternalId": ""
+    },
+    "dashboard": {
+        "annotations": {
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": "-- Grafana --",
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "hideControls": false,
+        "id": "katana",
+        "links": [],
+        "panels": [],
+        "schemaVersion": 25,
+        "style": "dark",
+        "tags": [
+            "slice"
+        ],
+        "templating": {
+            "list": []
+        },
+        "time": {
+            "from": "now-5m",
+            "to": "now"
+        },
+        "timepicker": {},
+        "timezone": "",
+        "title": "SLICE_ID",
+        "uid": "SLICE_ID",
+        "version": 1
+    }
+}

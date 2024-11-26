@@ -1,0 +1,14 @@
+{
+    "name" : "SMAlert",
+    "nameSpace" : "sm.alert.manager.events",
+    "version" : "0.0.1",
+    "source" : "SMAlertManager",
+    "target" : "APEX",
+    "sliceId" : "1234",
+    "alertType": "failingNS",
+    "alertMessage": {
+        "NS_ID" : "1234",
+        "NSD_ID" : "1234",
+        "status" : "up"
+    }
+}

@@ -1,0 +1,29 @@
+Flask
+
+# API.
+flask-classful
+itsdangerous
+PyYAML
+
+# Application server for both development and production.
+gunicorn
+
+openstacksdk
+
+#PyONE - OpenNebula
+pyone == 6.10.0
+
+# PyMongo
+pymongo
+
+# Tnglib
+# git+https://github.com/sonata-nfv/tng-cli
+
+# Flask CORS
+flask-cors
+
+# Kafka
+kafka-python
+
+# WSGI web application library
+werkzeug

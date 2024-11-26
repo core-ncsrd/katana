@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+
+  "type": "object",
+  "description": "A new NFVO",
+  "properties": {
+    "id":{
+      "type": "string",
+      "description": "Unique id"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name for the new NFVO"
+    },
+    "nfvoip": {
+      "type": "string",
+      "description": "NFVO's authentication URL - example: http://10.200.64.2:5000/v3/"
+    },
+    "nfvousername": {
+      "type": "string",
+      "description": "The admin username"
+    },
+    "nfvopassword": {
+      "type": "string",
+      "description": "The admin password"
+    },
+    "tenantname": {
+      "type": "string",
+      "description": "NFVO's Tenant name"
+    },
+    "type": {
+      "type": "string",
+      "description": "NFVO's type"
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of the NFVO's OS"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description for the NFVO"
+    },
+    "config": {
+        "type": "object",
+        "description": "Optional parameters regarding the NFVO operation - example: network: flat"
+    }
+  },
+  "required": ["id", "nfvousername", "nfvopassword", "nfvoip", "tenantname"]
+}

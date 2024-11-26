@@ -1,0 +1,857 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+
+  "definitions":{
+    "ns_list":{
+      "type": "array",
+      "description": "A list of the NSs on which the EMS must run D1 & D2 configuration",
+      "items": {
+        "type": "object",
+        "description": "A NS",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the Network Service"
+          },
+          "location": {
+            "type": "string",
+            "description": "The location of the Network Service"
+          },
+          "vnf_list": {
+            "type": "array",
+            "description": "A list of VNFs that compose the NS",
+            "items": {
+              "type": "object",
+              "description": "A VNF",
+              "properties": {
+                "vnf_name": {
+                  "type": "string",
+                  "description": "The name of the VNF"
+                },
+                "mgmt_ip": {
+                  "type": "string",
+                  "description": "The management IP of the VNF of the VNF"
+                },
+                "vdu_IP_list": {
+                  "type": "array",
+                  "description": "The list of the VDUs that compose the VNF",
+                  "items": {
+                    "type": "string",
+                    "description": "A VDU IP"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }  
+    },
+    "pnf_list": {
+      "type": "array",
+      "description": "A list of the PNFs on which the EMS must run D1 & D2 configuration",
+      "items": {
+        "type": "object",
+        "description": "A Physical Network Service",
+        "properties": {
+          "pnf-id": {
+            "type": "string",
+            "description": "A Unique ID of the pnf"
+          },
+          "pnf-name": {
+            "type": "string",
+            "description": "The name of the PNF"
+          },
+          "description": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string",
+            "description": "The management IP of the PNF"
+          },
+          "location": {
+            "type": "string",
+            "description": "The location of the PNF"
+          },
+          "optional":{
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "slice_sla":{
+      "type": "object",
+      "description": "Slice Parameters for NEST",
+      "properties": {
+        "ue_DL_throughput": {
+          "type": "object",
+          "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in downlink",
+          "properties": {
+            "guaranteed": {
+              "type": "number",
+              "description": "kbps"
+            },
+            "maximum": {
+              "type": "number",
+              "description": "kbps"
+            }
+          }
+        },
+        "ue_UL_throughput": {
+          "type": "object",
+          "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in uplink",
+          "properties": {
+            "guaranteed": {
+              "type": "number",
+              "description": "kbps"
+            },
+            "maximum": {
+              "type": "number",
+              "description": "kbps"
+            }
+          }
+        },
+        "group_communication_support": {
+          "type": "number",
+          "enum": [0, 1, 2, 3],
+          "description": "0: not available 1: Single Cell Point to Multipoint (SCPTM) 2: Broadcast/Multicast 3: Broadcast/Multicast + SC-PTM"
+        },
+        "number_of_terminals": {
+          "type": "number",
+          "description": "This attribute describes the maximum number of concurrent terminals supported by the network slice."
+        },
+        "positional_support": {
+          "type": "object",
+          "description": "This attribute describes if the network slice provides geo-localization methods or supporting methods.",
+          "properties": {
+            "availability": {
+              "type": "array",
+              "description": "Describes if this attribute is provided by the network slice and contains a list of positioning methods provided by the slice.",
+              "items": {
+                "type": "number",
+                "enum": [1, 2, 3, 4, 5, 6, 7],
+                "description": "1: CID 2: E-CID (LTE and NR) 3: OTDOA (LTE and NR) 4: RF fingerprinting 5: AECID 6: Hybrid positioning 7: NET-RTK"
+              }
+            },
+            "frequency": {
+              "type": "number",
+              "description": "Seconds"
+            },
+            "accuracy": {
+              "type": "number",
+              "description": "Meters"
+            }
+          }
+        },
+        "radio_spectrum": {
+          "type": "array",
+          "description": "Defines the radio spectrum supported by the network slice.",
+          "items": {
+            "type": "string",
+            "description": "This attribute simply tells which frequencies can be used to access the network slice. Example: n1, n77, n38"
+          }
+        },
+        "device_velocity": {
+          "type": "number",
+          "enum": [1, 2, 3, 4],
+          "description": "1: Stationary: 0 km/h 2: Pedestrian: 0 km/h to 10 km/h 3: Vehicular: 10 km/h to 120 km/h 4: High speed vehicular: 120 km/h to 500 km/h"
+        },
+        "terminal_density": {
+          "type": "number",
+          "description": "Maximum number of connected and/or accessible devices per unit area (per km2) supported by the network slice [Number/km^2]"
+        }
+      }
+    },
+    "time": {
+      "type": "object",
+      "properties": {
+        "NS_Deployment_Time": {
+          "type": "object",
+          "properties": {
+            "NSi_name": {
+              "type": "number",
+              "description": "Seconds"
+            }
+          }
+        },
+        "Placement_Time": {
+          "type": "number",
+          "description": "Seconds"
+        },
+        "Provisioning_Time": {
+          "type": "number",
+          "description": "Seconds"
+        },
+        "Radio_Configuration_Time": {
+          "type": "number",
+          "description": "Seconds"
+        },
+        "Slice_Deployment_Time": {
+          "type": "number",
+          "description": "Seconds"
+        },
+        "WAN_Deployment_Time": {
+          "type": "number",
+          "description": "Seconds"
+        }
+      },
+      "description": "The Slice Deployment time"
+    }
+  },
+
+
+  "type": "object",
+  "properties": {
+    "_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The uuid that is used for storing the NSI in the database"
+    },
+    "created_at": {
+      "type": "number",
+      "format": "date-time"
+    },
+    "deployment_time": {
+      "$ref": "#/definitions/time"
+    },
+    "coverage": {
+      "type": "array",
+      "description": "A list with all the locations that are part of the slice",
+      "items":{
+        "type": "string",
+        "description": " The location name for each site in the slice"
+      }
+    },
+    "network_DL_throughput": {
+      "type": "object",
+      "description": "The achievable data rate in downlink for the whole network slice (and not per user).",
+      "properties": {
+        "guaranteed": {
+          "type": "number",
+          "description": "kbps"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "kbps"
+        }
+      }
+    },
+    "ue_DL_throughput": {
+      "type": "object",
+      "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in downlink",
+      "properties": {
+        "guaranteed": {
+          "type": "number",
+          "description": "kbps"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "kbps"
+        }
+      }
+    },
+    "network_UL_throughput": {
+      "type": "object",
+      "description": "The achievable data rate in uplink for the whole network slice (and not per user).",
+      "properties": {
+        "guaranteed": {
+          "type": "number",
+          "description": "kbps"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "kbps"
+        }
+      }
+    },
+    "ue_UL_throughput": {
+      "type": "object",
+      "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in uplink",
+      "properties": {
+        "guaranteed": {
+          "type": "number",
+          "description": "kbps"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "kbps"
+        }
+      }
+    },
+    "group_communication_support": {
+      "type": "number",
+      "enum": [0, 1, 2, 3],
+      "description": "0: not available 1: Single Cell Point to Multipoint (SCPTM) 2: Broadcast/Multicast 3: Broadcast/Multicast + SC-PTM"
+    },
+    "mtu": {
+      "type": "number",
+      "description": "Bytes"
+    },
+    "mission_critical_support": {
+      "type": "object",
+      "description": "Mission-critical (MC) leads to a priority of the network slice relative to others, for C-plane and U-plane decisions.",
+      "properties": {
+        "availability": {
+          "type": "boolean"
+        },
+        "mc_service": {
+          "type": "array",
+          "description": "This attribute specifies whether or not the network slice supports MC push-to-talk, MC data, MC video, Isolated E-UTRAN Operation for Public Safety or MC interworking.",
+          "items": {
+            "type": "number",
+            "enum": [1, 2, 3, 4, 5],
+            "description": "1: MCPTT 2: MCData 3: MCVideo 4: IOPS 5: MC interworking"
+          }
+        }
+      }
+    },
+    "mmtel_support": {
+      "type": "boolean",
+      "description": "This attribute describes whether the network slice supports IP Multimedia Subsystem (IMS) and Multimedia Telephony Service MMTel."
+    },
+    "nb_iot": {
+      "type": "boolean",
+      "description": "This parameter describes whether NB-IoT is supported in the network slice."
+    },
+    "number_of_connections": {
+      "type": "number",
+      "description": "This attribute describes the maximum number of concurrent sessions supported by the network slice."
+    },
+    "number_of_terminals": {
+      "type": "number",
+      "description": "This attribute describes the maximum number of concurrent terminals supported by the network slice."
+    },
+    "positional_support": {
+      "type": "object",
+      "description": "This attribute describes if the network slice provides geo-localization methods or supporting methods.",
+      "properties": {
+        "availability": {
+          "type": "array",
+          "description": "Describes if this attribute is provided by the network slice and contains a list of positioning methods provided by the slice.",
+          "items": {
+            "type": "number",
+            "enum": [1, 2, 3, 4, 5, 6, 7],
+            "description": "1: CID 2: E-CID (LTE and NR) 3: OTDOA (LTE and NR) 4: RF fingerprinting 5: AECID 6: Hybrid positioning 7: NET-RTK"
+          }
+        },
+        "frequency": {
+          "type": "number",
+          "description": "Seconds"
+        },
+        "accuracy": {
+          "type": "number",
+          "description": "Meters"
+        }
+      }
+    },
+    "radio_spectrum": {
+      "type": "array",
+      "description": "Defines the radio spectrum supported by the network slice.",
+      "items": {
+        "type": "string",
+        "description": "This attribute simply tells which frequencies can be used to access the network slice. Example: n1, n77, n38"
+      }
+    },
+    "qos": {
+      "type": "array",
+      "description": "This attribute defines all the QoS relevant parameters supported by the network slice, based on 3GPP defined standard values (5QIs)",
+      "items": {
+        "type": "object",
+        "description": "Refers to 5QI defined in https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3144",
+        "properties": {
+          "qi": {
+            "type": "number",
+            "description": "Based on the table of defined 5QI by 3GPP"
+          },
+          "resource_type": {
+            "type": "number",
+            "enum": [0, 1, 2],
+            "description": "0: GBR (Mission Critical Video user plane) 1: Delay critical GBR (Intelligent Transport Systems) 2: Non-GBR (Voice, AR)"
+          },
+          "priority_level": {
+            "type": "number",
+            "description": "Associated with 5G QoS characteristics indicates a priority in scheduling resources among QoS Flows."
+          },
+          "packet_delay_budget": {
+            "type": "number",
+            "description": "The Packet Delay Budget (PDB) defines an upper bound for the time that a packet may be delayed between the UE and the UPF [Seconds]."
+          },
+          "packet_error_rate": {
+            "type": "number",
+            "description": "The Packet Error Rate (PER) defines an upper bound for the rate of packets that are not successfully delivered by the corresponding receiver [percentage]."
+          },
+          "jitter": {
+            "type": "number",
+            "description": "Jitter is defined as a variation in the delay of received packets [Seconds]."
+          },
+          "max_packet_loss_rate": {
+            "type": "number",
+            "description": " the maximum rate for lost packets of the QoS flow that can be tolerated in the uplink (UL) and downlink (DL) direction [percentage."
+          }
+        }
+      }
+    },
+    "nonIP_traffic": {
+      "type": "boolean"
+    },
+    "device_velocity": {
+      "type": "number",
+      "enum": [1, 2, 3, 4],
+      "description": "1: Stationary: 0 km/h 2: Pedestrian: 0 km/h to 10 km/h 3: Vehicular: 10 km/h to 120 km/h 4: High speed vehicular: 120 km/h to 500 km/h"
+    },
+    "terminal_density": {
+      "type": "number",
+      "description": "maximum number of connected and/or accessible devices per unit area (per km2) supported by the network slice [Number/km^2]"
+    },
+    "probe_list": {
+      "type": "array",
+      "description": "A list of probe ids to be included in the slice",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "description": "Init, Peovisioning, Activation, Running or Terminating"
+    },
+    "connections": {
+      "type": "array",
+      "description": "A list of 5G service connections. Each connection contains a core and a radio endpoint. The endpoints are selected from the platform fanctions repository of the Slice Manager",
+      "items": {
+        "type": "object",
+        "description": "A 5G service connections. Each connection contains a core and a radio endpoint. The endpoints are selected from the platform fanctions repository of the Slice Manager",
+        "properties": {
+          "core": {
+            "type": "object",
+            "description": "The Core part of the 5G service connection",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The uuid of the function that is used in the database"
+              },
+              "id": {
+                "type": "string",
+                "description": "A unique ID of the function"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the function"
+              },
+              "gen": {
+                "type": "number",
+                "enum": [4, 5],
+                "description" : "Type of the network function - 4: 4G, 5: 5G"
+              },
+              "func":{
+                "type": "number",
+                "enum": [0, 1],
+                "description": "0: Core, 1: Radio"
+              },
+              "shared": {
+                "type": "object",
+                "description": "Defines if the function can be shared between different slices",
+                "properties": {
+                  "availability": {
+                    "type": "boolean",
+                    "description": "true: shared, false: no shared"
+                  },
+                  "max_shared": {
+                    "type": "number",
+                    "description": "Max number of slices - If availability is true and max_shared not defined, it will be assumed unlimited availability"
+                  }
+                },
+                "required": ["availability"]
+              },
+              "type": {
+                "type": "number",
+                "enum": [0, 1],
+                "description": "0: Virtual, 1: Physical"
+              },
+              "location": {
+                "type": "string",
+                "description": "Supported location"
+              },
+              "ns_list": {
+                "type": "array",
+                "description": "Conditional - If type == Virtual - A list of the NSs that will be part of the slice",
+                "items": {
+                  "type": "object",
+                  "description": "A Network Service",
+                  "properties":{
+                    "nfvo-id":{
+                      "type": "string",
+                      "description": "The NFVO that will manage the life cycle of the NS"
+                    },
+                    "nsd-id": {
+                      "type": "string",
+                      "description": "The NSD id as defined on the NFVO"
+                    },
+                    "ns-name": {
+                      "type": "string",
+                      "description": "The name of the NS"
+                    },
+                    "placement": {
+                      "type": "number",
+                      "enum": [0, 1],
+                      "description": "1: Core, 2: Edge"
+                    },
+                    "optional":{
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "pnf_list": {
+                "type": "array",
+                "description": "Conditional - If type == Physical - A list of the PNFs that will be part of the slice",
+                "items": {
+                  "type": "object",
+                  "description": "A Physical Network Service",
+                  "properties": {
+                    "pnf-id": {
+                      "type": "string",
+                      "description": "A Unique ID of the pnf"
+                    },
+                    "pnf-name": {
+                      "type": "string",
+                      "description": "The name of the PNF"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "ip": {
+                      "type": "string",
+                      "description": "The management IP of the PNF"
+                    },
+                    "location": {
+                      "type": "string",
+                      "description": "The location of the PNF"
+                    },
+                    "optional":{
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "ems-id": {
+                "type": "string",
+                "description": "Optional - Defines the EMS that is responsible for D1&2 configuration"
+              }
+            }
+          }
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "description": "A list of all the functions that are used in the slice",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "conf_comp": {
+      "type": "object",
+      "description": "The items components that have been configured by the ems"
+    },
+    "ns_list": {
+      "type": "array",
+      "description": "A list of the instantiated NSs",
+      "items": {
+        "type": "object",
+        "description": "A Network Service",
+        "properties":{
+          "nfvo-id":{
+            "type": "string",
+            "description": "The NFVO that will manage the life cycle of the NS"
+          },
+          "nsd-id": {
+            "type": "string",
+            "description": "The NSD id as defined on the NFVO"
+          },
+          "ns-name": {
+            "type": "string",
+            "description": "The name of the NS"
+          },
+          "placement": {
+            "type": "number",
+            "enum": [0, 1],
+            "description": "1: Core, 2: Edge"
+          },
+          "optional":{
+            "type": "boolean"
+          },
+          "nsd-info": {
+            "type": "object",
+            "description": "Information about the NS Descriptor",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "vnfd_list": {
+                "type": "array",
+                "description": "The list of VNFDs in the NSD",
+                "items": {
+                  "type": "string",
+                  "description": "A VNFD"
+                }
+              },
+              "flavor": {
+                "type": "object",
+                "properties": {
+                  "memory-mb": {
+                    "type": "integer"
+                  },
+                  "vcpu-count": {
+                    "type": "integer"
+                  },
+                  "storage-gb": {
+                    "type": "integer"
+                  }
+                },
+                "description": "The NS requirements"
+              },
+              "nfvo-id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          "placement_loc": {
+            "type": "object",
+            "description": "Detailed info regarding the placement of the NS",
+            "properties": {
+              "location": {
+                "type": "string",
+                "description": "The location where the NS is running"
+              },
+              "vim": {
+                "type": "string",
+                "description": "The VIM ID of the location where the NS is hosted"
+              }
+            }
+          },
+          "vims": {
+            "type": "array",
+            "description": "The list of VIMs used for the NS",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The uuid of the VIM"
+            }
+          }
+        }
+      }
+    },
+    "wim_data": {
+      "type": "object",
+      "description": "The data that was sent to WIM",
+      "properties": {
+        "slice_sla":{
+          "type": "object",
+          "description": "Slice parameteres as defiend in NEST",
+          "properties": {
+            "network_DL_throughput": {
+              "type": "object",
+              "description": "The achievable data rate in downlink for the whole network slice (and not per user).",
+              "properties": {
+                "guaranteed": {
+                  "type": "number",
+                  "description": "kbps"
+                },
+                "maximum": {
+                  "type": "number",
+                  "description": "kbps"
+                }
+              }
+            },
+            "network_UL_throughput": {
+              "type": "object",
+              "description": "The achievable data rate in uplink for the whole network slice (and not per user).",
+              "properties": {
+                "guaranteed": {
+                  "type": "number",
+                  "description": "kbps"
+                },
+                "maximum": {
+                  "type": "number",
+                  "description": "kbps"
+                }
+              }
+            },
+            "mtu": {
+              "type": "number",
+              "description": "Bytes"
+            }
+          }
+        },
+        "core_connections": {
+          "type": "array",
+          "description": "List of connections that are part of the slice and must be implemented by the WIM",
+          "items":{
+            "type": "object",
+            "description": "The endpoints of the connections",
+            "properties": {
+              "core": {
+                "type": "object",
+                "description": "The core part of the radio connection",
+                "properties":{
+                  "ns": {
+                    "type": "array",
+                    "description": "A list of VIMs where the NSs have been instantiated",
+                    "items": {
+                      "type": "object",
+                      "description": "A VIM hosting NSs",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "description": "The location of the VIM"
+                        },
+                        "vim": {
+                          "type": "string",
+                          "description": "The ID of the VIM"
+                        }
+                      }
+                    }
+                  },
+                  "pnf": {
+                    "type": "array",
+                    "description": "A list of the PNFs that are part of the slice",
+                    "items": {
+                      "type": "object",
+                      "description": "A Physical Network Service",
+                      "properties": {
+                        "pnf-id": {
+                          "type": "string",
+                          "description": "A Unique ID of the pnf"
+                        },
+                        "pnf-name": {
+                          "type": "string",
+                          "description": "The name of the PNF"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "ip": {
+                          "type": "string",
+                          "description": "The management IP of the PNF"
+                        },
+                        "location": {
+                          "type": "string",
+                          "description": "The location of the PNF"
+                        },
+                        "optional":{
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "radio": {
+                "type": "object",
+                "description": "The core part of the radio connection",
+                "properties":{
+                  "ns": {
+                    "type": "array",
+                    "description": "A list of VIMs where the NSs have been instantiated",
+                    "items": {
+                      "type": "object",
+                      "description": "A VIM hosting NSs",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "description": "The location of the VIM"
+                        },
+                        "vim": {
+                          "type": "string",
+                          "description": "The ID of the VIM"
+                        }
+                      }
+                    }
+                  },
+                  "pnf": {
+                    "type": "array",
+                    "description": "A list of the PNFs that are part of the slice",
+                    "items": {
+                      "type": "object",
+                      "description": "A Physical Network Service",
+                      "properties": {
+                        "pnf-id": {
+                          "type": "string",
+                          "description": "A Unique ID of the pnf"
+                        },
+                        "pnf-name": {
+                          "type": "string",
+                          "description": "The name of the PNF"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "ip": {
+                          "type": "string",
+                          "description": "The management IP of the PNF"
+                        },
+                        "location": {
+                          "type": "string",
+                          "description": "The location of the PNF"
+                        },
+                        "optional":{
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "extra_ns" : {
+          "type": "array",
+          "description": "A list of VIMs where the NSs that are not part of the core slice have been instantiated",
+          "items": {
+            "type": "object",
+            "description": "A VIM hosting NSs",
+            "properties": {
+              "location": {
+                "type": "string",
+                "description": "The location of the VIM"
+              },
+              "vim": {
+                "type": "string",
+                "description": "The ID of the VIM"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ems_data": {
+      "type": "object",
+      "description": "Schema of the message from Katana to EMS",
+      "properties": {
+        "core": {
+          "type": "object",
+          "description": "The Core part of the Radio Service",
+          "properties": {
+            "ns": {"$ref": "#/definitions/ns_list"},
+            "pnf": {"$ref": "#/definitions/pnf_list"}
+          }
+        },
+        "radio": {
+          "type": "object",
+          "description": "The Radio part of the Radio Service",
+          "properties": {
+            "ns": {"$ref": "#/definitions/ns_list"},
+            "pnf": {"$ref": "#/definitions/pnf_list"}
+          }
+        },
+        "slice_sla": {"$ref": "#/definitions/slice_sla"}
+      }
+    }
+  }
+}

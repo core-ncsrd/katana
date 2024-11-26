@@ -1,0 +1,23 @@
+{
+    "base_slice_descriptor": {
+        "base_slice_des_id": "group0_demo_slice",
+        "coverage": [
+            "group0_edge"
+        ],
+        "delay_tolerance": true,
+        "network_DL_throughput": {
+            "guaranteed": 1500000
+        },
+        "ue_DL_throughput": {
+            "guaranteed": 1500000
+        },
+        "network_UL_throughput": {
+            "guaranteed": 50000
+        },
+        "ue_UL_throughput": {
+            "guaranteed": 60000
+        },
+        "mtu": 1500
+    },
+    "service_descriptor": {}
+}

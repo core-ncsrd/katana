@@ -1,0 +1,12 @@
+{
+  "id": "osm16",
+  "name": "osm16",
+  "nfvoip": "nbi.10.101.10.188.nip.io",
+  "nfvousername": "admin",
+  "nfvopassword": "admin",
+  "tenantname": "katana",
+  "type": "OSM",
+  "version": "16",
+  "description": "OSM Release 16",
+  "config": {}
+}

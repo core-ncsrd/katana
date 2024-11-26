@@ -1,0 +1,13 @@
+# PyMongo
+pymongo==3.7.2
+
+# Kafka
+kafka-python==1.4.7
+
+# Requests
+requests
+
+openstacksdk==0.23.0
+
+#PyONE - OpenNebula
+pyone==5.8.2

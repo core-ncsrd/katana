@@ -1,0 +1,16 @@
+{
+  "id": "vim_core",
+  "name": "vim_Core",
+  "auth_url": "http://10.161.0.11:5000/v3/",
+  "username": "*****",
+  "password": "*****",
+  "admin_project_name": "*****",
+  "location": "Core",
+  "type": "openstack",
+  "version": "Wallaby",
+  "description": "Group 0 VIM",
+  "infrastructure_monitoring": "*****",
+  "config": {
+    "security_groups": "TBD"
+  }
+}

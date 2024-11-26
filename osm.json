@@ -1,0 +1,20 @@
+{
+  "id": "osm2",
+  "name": "test2",
+  "nfvoip": "nbi.10.101.10.188.nip.io",
+  "nfvousername": "admin",
+  "nfvopassword": "admin",
+  "tenantname": "admin",
+  "type": "OSM",
+  "version": "",
+  "description": "string",
+  "config": [
+    {
+      "id": "0",
+      "nfvousername": "admin",
+      "nfvopassword": "admin",
+      "nfvoip": "nbi.10.101.10.188.nip.io",
+      "tenantname": "admin"
+    }
+  ]
+}

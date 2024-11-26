@@ -1,0 +1,330 @@
+{
+    "meta": {
+        "type": "db",
+        "canSave": true,
+        "canEdit": true,
+        "canAdmin": true,
+        "canStar": true,
+        "version": 1,
+        "hasAcl": false,
+        "isFolder": false,
+        "folderId": 0,
+        "folderTitle": "General",
+        "folderUrl": "",
+        "provisioned": false,
+        "provisionedExternalId": ""
+    },
+    "dashboard": {
+        "annotations": {
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": "-- Grafana --",
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "hideControls": false,
+        "id": "katana",
+        "links": [],
+        "panels": [
+            {
+                "datasource": "katana-prometheus",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "align": null,
+                            "displayMode": "color-background"
+                        },
+                        "mappings": [
+                            {
+                                "from": "",
+                                "id": 0,
+                                "operator": "",
+                                "text": "Running",
+                                "to": "",
+                                "type": 1,
+                                "value": "0"
+                            },
+                            {
+                                "from": "",
+                                "id": 1,
+                                "operator": "",
+                                "text": "Placement",
+                                "to": "",
+                                "type": 1,
+                                "value": "1"
+                            },
+                            {
+                                "from": "",
+                                "id": 2,
+                                "operator": "",
+                                "text": "Provisioning",
+                                "to": "",
+                                "type": 1,
+                                "value": "2"
+                            },
+                            {
+                                "from": "",
+                                "id": 3,
+                                "operator": "",
+                                "text": "Activation",
+                                "to": "",
+                                "type": 1,
+                                "value": "3"
+                            },
+                            {
+                                "from": "",
+                                "id": 4,
+                                "operator": "",
+                                "text": "Terminating",
+                                "to": "",
+                                "type": 1,
+                                "value": "10"
+                            },
+                            {
+                                "from": "",
+                                "id": 5,
+                                "operator": "",
+                                "text": "Error",
+                                "to": "",
+                                "type": 1,
+                                "value": "11"
+                            },
+                            {
+                                "from": "",
+                                "id": 6,
+                                "operator": "",
+                                "text": "Deleted",
+                                "to": "",
+                                "type": 1,
+                                "value": "12"
+                            },
+                            {
+                                "from": "",
+                                "id": 7,
+                                "operator": "",
+                                "text": "",
+                                "to": "",
+                                "type": 1
+                            }
+                        ],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "super-light-purple",
+                                    "value": null
+                                },
+                                {
+                                    "color": "dark-green",
+                                    "value": 0
+                                },
+                                {
+                                    "color": "blue",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "blue",
+                                    "value": 2
+                                },
+                                {
+                                    "color": "blue",
+                                    "value": 3
+                                },
+                                {
+                                    "color": "dark-orange",
+                                    "value": 10
+                                },
+                                {
+                                    "color": "dark-red",
+                                    "value": 11
+                                },
+                                {
+                                    "color": "dark-purple",
+                                    "value": 12
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 15,
+                    "w": 12,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 5,
+                "options": {
+                    "showHeader": true
+                },
+                "pluginVersion": "7.0.4",
+                "targets": [
+                    {
+                        "expr": "katana_status",
+                        "format": "table",
+                        "instant": true,
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Slice Status",
+                "transformations": [
+                    {
+                        "id": "organize",
+                        "options": {
+                            "excludeByName": {
+                                "Time": true,
+                                "__name__": true,
+                                "instance": true,
+                                "job": true
+                            },
+                            "indexByName": {},
+                            "renameByName": {}
+                        }
+                    }
+                ],
+                "type": "table"
+            },
+            {
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {}
+                    },
+                    "overrides": []
+                },
+                "folderId": 0,
+                "gridPos": {
+                    "h": 15,
+                    "w": 12,
+                    "x": 12,
+                    "y": 0
+                },
+                "headings": true,
+                "id": 3,
+                "limit": 30,
+                "links": [],
+                "query": "",
+                "recent": true,
+                "search": true,
+                "starred": true,
+                "tags": [
+                    "slice"
+                ],
+                "title": "Dashboards",
+                "type": "dashlist"
+            },
+            {
+                "datasource": "katana-prometheus",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {},
+                        "decimals": 0,
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "dark-blue",
+                                    "value": null
+                                },
+                                {
+                                    "color": "dark-yellow",
+                                    "value": 3
+                                },
+                                {
+                                    "color": "dark-orange",
+                                    "value": 10
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 0,
+                    "y": 15
+                },
+                "id": 7,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    }
+                },
+                "pluginVersion": "7.0.4",
+                "targets": [
+                    {
+                        "expr": "total_slices",
+                        "format": "time_series",
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Active Slices",
+                "type": "stat"
+            },
+            {
+                "content": "\n# Katana Slice Manager\n\n----\n\n* **[Github Repository](https://github.com/medianetlab/katana-slice_manager)**\n* **[Wiki](https://github.com/medianetlab/katana-slice_manager/wiki)**\n* **[More Info](https://5genesis.eu/wp-content/uploads/2019/10/5GENESIS_D3.3_v1.0.pdf)**\n",
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {}
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 7,
+                    "w": 12,
+                    "x": 12,
+                    "y": 15
+                },
+                "id": 9,
+                "mode": "markdown",
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Katana Slice Manager Info",
+                "type": "text"
+            }
+        ],
+        "schemaVersion": 25,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+            "list": []
+        },
+        "time": {
+            "from": "now-5m",
+            "to": "now"
+        },
+        "timepicker": {},
+        "timezone": "",
+        "title": "Katana Home",
+        "uid": "katana_home",
+        "version": 14
+    }
+}

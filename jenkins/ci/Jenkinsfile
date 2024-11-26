@@ -1,0 +1,128 @@
+pipeline {
+    agent {
+        node {
+            label "${test_server}"
+        }
+    }
+
+    environment {
+        MAJOR_RELEASE="${sh(script:'git fetch --tags && git tag --sort version:refname | tail -1', returnStdout: true).trim()}"
+        TAG_NUMBER="${MAJOR_RELEASE}.${env.BUILD_NUMBER}"
+        }
+
+    stages {
+        // *************************
+        // *** Build Test Images ***
+        // *************************
+        stage("build_test_images") {
+            steps{
+                echo "**** Building Test Katana Images ****"
+                sh 'bash bin/build.sh'
+            }
+        }
+        
+        // ******************************
+        // *** Test Katana Deployment ***
+        // ******************************
+        stage("test_deployment") {
+            steps{
+                echo "**** Test Katana Deployment ****"
+                sh 'bash bin/deploy.sh'
+            }
+        }
+
+        // ************************
+        // *** Functional Tests ***
+        // ************************
+        stage("functional_tests"){
+            steps{
+                echo "**** Running Functional Test ****"
+                sh 'bash jenkins/ci/tests/functional/list_of_slices.sh'
+            }
+        }
+
+        // ******************************
+        // *** Remove Test Deployment ***
+        // ******************************
+        stage("remove_test_deployment") {
+            steps{
+                echo "**** Remove Test Katana Deployment ****"
+                sh 'bash bin/stop.sh'
+            }
+        }
+
+        // ************************
+        // *** Clean Everything ***
+        // ************************
+        stage("clean_everything") {
+            steps{
+                echo "**** Clean Everything ****"
+                sh 'bash bin/uninstall.sh'
+            }
+        }
+
+        // *****************************
+        // *** Push Images If Master ***
+        // *****************************
+        stage("push_images") {
+            when {
+                anyOf {
+                    allOf {
+                        changeset "**/katana-**/**"
+                        environment name: "GIT_BRANCH", value: "origin/master"
+                    }
+                    expression { return "${force_push_images}" == "true" }
+                }
+            }
+            steps{
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'katana-reg-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]){
+                    echo "**** Build & Push Images ****"
+                    sh 'bash bin/build.sh --release ${TAG_NUMBER} --docker_reg "${katana_reg}" --docker_repo "${katana_repo}" --docker_reg_user ${USERNAME} --docker_reg_passwd ${PASSWORD} --push'
+                    sh 'bash bin/build.sh --release latest --docker_reg "${katana_reg}" --docker_repo "${katana_repo}" --docker_reg_user ${USERNAME} --docker_reg_passwd ${PASSWORD} --push'
+                }
+            }
+        }
+
+        // ********************************
+        // *** Deploy Staging If Master ***
+        // ********************************
+        stage("deploy_latest") {
+            when {
+                anyOf {
+                    allOf {
+                        changeset "**/katana-**/**"
+                        environment name: "GIT_BRANCH", value: "origin/master"
+                    }
+                    expression { return "${force_push_images}" == "true" }
+                }
+            }
+            agent {
+                node {
+                    label "${stg_server}"
+                }
+            }
+            steps{
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'katana-reg-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]){
+                    echo "***** Deploying new version ${MAJOR_RELEASE} *****" 
+                    sh 'bash bin/deploy.sh -m -p --release latest --docker_reg "${katana_reg}" --docker_repo "${katana_repo}" --docker_reg_user ${USERNAME} --docker_reg_passwd ${PASSWORD} --no_build'
+                }
+            }
+        }
+    }
+
+
+    post{
+        success{
+            script {
+                if (env.BRANCH_NAME == 'origin/master')
+                    slackSend (color: "#008000", message: "Successfully deployed Katana version ${MAJOR_RELEASE} on staging environment : '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+            }
+        }
+        failure{
+            slackSend (color: "#FF0000", message: "Katana CI Failed: '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+        fixed{
+            slackSend (color: "#008000", message: "Katana CI Back to normal: '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+    }
+}

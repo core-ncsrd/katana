@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Schema of the message from Katana to WIM",
+  "properties": {
+    "slice_sla": {
+      "type": "object",
+      "description": "Slice parameteres as defiend in NEST",
+      "properties": {
+        "network_DL_throughput": {
+          "type": "object",
+          "description": "The achievable data rate in downlink for the whole network slice (and not per user).",
+          "properties": {
+            "guaranteed": {
+              "type": "number",
+              "description": "kbps"
+            },
+            "maximum": {
+              "type": "number",
+              "description": "kbps"
+            }
+          }
+        },
+        "network_UL_throughput": {
+          "type": "object",
+          "description": "The achievable data rate in uplink for the whole network slice (and not per user).",
+          "properties": {
+            "guaranteed": {
+              "type": "number",
+              "description": "kbps"
+            },
+            "maximum": {
+              "type": "number",
+              "description": "kbps"
+            }
+          }
+        },
+        "mtu": {
+          "type": "number",
+          "description": "Bytes"
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "List of connections that are part of the slice and must be implemented by the WIM",
+      "items": {
+        "type": "object",
+        "description": "The endpoints of the connections",
+        "properties": {
+          "core": {
+            "type": "string",
+            "description": "The core part of the radio connection"
+          }
+        }
+      },
+      "radio": {
+        "type": "string",
+        "description": "The core part of the radio connection"
+      }
+    }
+  }
+}

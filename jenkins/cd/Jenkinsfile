@@ -1,0 +1,35 @@
+pipeline {
+    agent {
+        node {
+            label "${prod_server}"
+        }
+    }
+
+    environment {
+        MAJOR_RELEASE="${sh(script:'git fetch --tags && git tag --sort version:refname | tail -1', returnStdout: true).trim()}"
+    }
+
+    stages {
+        // ********************************
+        // *** Deploy The Latest Images ***
+        // ********************************
+        stage("deploy_latest_in_production") {
+            steps{
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'katana-reg-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]){
+                    echo "***** Deploying new version ${MAJOR_RELEASE} *****" 
+                    sh 'echo ${prod_server_ip} | bash bin/deploy.sh -m -p --release latest --docker_reg "${katana_reg}" --docker_repo "${katana_repo}" --docker_reg_user ${USERNAME} --docker_reg_passwd ${PASSWORD} --no_build'
+                }
+            }
+        }
+    }
+
+    post{
+        failure{
+            slackSend (color: "#FF0000", message: "Failed to deploy Katana version ${MAJOR_RELEASE} on production environment: '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+
+        success{
+            slackSend (color: "#008000", message: "Successfully deployed Katana version ${MAJOR_RELEASE} on production environment : '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        }
+    }
+}

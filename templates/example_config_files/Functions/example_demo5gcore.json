@@ -1,0 +1,20 @@
+{
+  "id": "group0_demo5GCore",
+  "name": "group0_demo5GCore",
+  "gen": 5,
+  "func": 0,
+  "shared": {
+    "availability": false
+  },
+  "type": 0,
+  "location": "Core",
+  "pnf_list": [],
+  "ns_list": [
+    {
+      "nsd-id": "e01072f6-4383-47cd-9dca-492b2891aeb1",
+      "ns-name": "demo_nsd",
+      "placement": 0,
+      "optional": false
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Prometheus Client
+prometheus_client
+
+# Python modules
+requests
+
+# Kafka
+kafka-python==1.4.7
+
+# PyMongo
+pymongo==3.7.2

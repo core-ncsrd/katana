@@ -1,0 +1,14 @@
+global:
+  resolve_timeout: 30s
+
+route:
+  receiver: katana_rest
+  repeat_interval: 30s
+  group_wait: 30s
+  group_interval: 30s
+
+receivers:
+  - name: katana_rest
+    webhook_configs:
+      - send_resolved: false
+        url: http://katana-nbi:8000/api/alert

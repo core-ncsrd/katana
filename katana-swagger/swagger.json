@@ -1,0 +1,4147 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Katana",
+    "description": "This is Katana Slice Manager Swagger for documenting Katana's NBI REST APIs. You can find more about Katana Slice Manager at [Katana Github page](https://github.com/medianetlab/katana-slice_manager).",
+    "contact": {
+      "email": "thmanagnostopoulos@iit.demokritos.gr"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "katana.version"
+  },
+  "servers": [
+    {
+      "url": "http://{KATANA_HOST}:8000/api",
+      "variables": {
+        "KATANA_HOST": {
+          "default": "katana.host",
+          "description": "IP address or Domain Name of Katana Host"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Slice",
+      "description": "Create, Read, Update and Delete Network Slices",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/user_guide"
+      }
+    },
+    {
+      "name": "VIM",
+      "description": "Add, Read, Update and Delete VIMs",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/sbi"
+      }
+    },
+    {
+      "name": "NFVO",
+      "description": "Add, Read, Update and Delete NFVOs",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/sbi"
+      }
+    },
+    {
+      "name": "WIM",
+      "description": "Add, Read, Update and Delete WIMs",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/sbi"
+      }
+    },
+    {
+      "name": "EMS",
+      "description": "Add, Read, Update and Delete EMSs",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/sbi"
+      }
+    },
+    {
+      "name": "Generic Slice Template",
+      "description": "Read the GST given to the SM",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/gst"
+      }
+    },
+    {
+      "name": "Base Slice Descriptors",
+      "description": "Create, Read, Update and Delete Base Slice Descriptors that will be included in the GST",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/gst"
+      }
+    },
+    {
+      "name": "Network Functions",
+      "description": "Read, Write, Update and Delete the supported slices on the platform",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/function"
+      }
+    },
+    {
+      "name": "Policy Mgmt System",
+      "description": "Add, Read, Update and Delete Policy Systems",
+      "externalDocs": {
+        "description": "Wiki",
+        "url": "https://github.com/medianetlab/katana-slice_manager/wiki/policy"
+      }
+    },
+    {
+      "name": "Resources",
+      "description": "Read the available/max resources"
+    },
+    {
+      "name": "Network Service Descriptors",
+      "description": "A list of the available Network Service Descriptors on the all NFVOs registered on the SM"
+    },
+    {
+      "name": "Bootstrap Katana",
+      "description": "Configure Katana Slice Manager using one JSON file"
+    },
+    {
+      "name": "Locations",
+      "description": "Edge locations supported by the underlying infrastructure"
+    }
+  ],
+  "paths": {
+    "/slice": {
+      "get": {
+        "tags": [
+          "Slice"
+        ],
+        "summary": "Returns a list of created slices",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/slice_ls"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Slice"
+        ],
+        "summary": "Creates a new slice",
+        "requestBody": {
+          "description": "Slice Parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gst": {
+                    "$ref": "#/components/schemas/gst"
+                  }
+                },
+                "description": "The GST for the new slice"
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gst": {
+                    "$ref": "#/components/schemas/gst"
+                  }
+                },
+                "description": "The GST for the new slice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Operation",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new Slice"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/slice/{slice_id}": {
+      "get": {
+        "tags": [
+          "Slice"
+        ],
+        "summary": "Returns information about the given slice",
+        "parameters": [
+          {
+            "name": "slice_id",
+            "in": "path",
+            "description": "ID of slice to be inspected",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/nsi"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Slice"
+        ],
+        "summary": "Deletes the given slice",
+        "parameters": [
+          {
+            "name": "slice_id",
+            "in": "path",
+            "description": "ID of slice to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleting",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/slice/{slice_id}/time": {
+      "get": {
+        "tags": [
+          "Slice"
+        ],
+        "summary": "Returns information about the deployment time of the given slice",
+        "parameters": [
+          {
+            "name": "slice_id",
+            "in": "path",
+            "description": "ID of slice",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/time"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/vim": {
+      "get": {
+        "tags": [
+          "VIM"
+        ],
+        "summary": "Returns a list of registered VIMs",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/sbi_ls"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VIM"
+        ],
+        "summary": "Adds a new VIM",
+        "requestBody": {
+          "description": "VIM Parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/vim"
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "$ref": "#/components/schemas/vim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new VIM"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/vim/{vim_id}": {
+      "get": {
+        "tags": [
+          "VIM"
+        ],
+        "summary": "Returns information about the given VIM id",
+        "parameters": [
+          {
+            "name": "vim_id",
+            "in": "path",
+            "description": "ID of VIM to be inspected",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/vim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "VIM"
+        ],
+        "summary": "Updates the given VIM",
+        "parameters": [
+          {
+            "name": "vim_id",
+            "in": "path",
+            "description": "ID of VIM to be updated",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "VIM Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/vim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new VIM"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "VIM"
+        ],
+        "summary": "Deletes the given VIM",
+        "parameters": [
+          {
+            "name": "vim_id",
+            "in": "path",
+            "description": "ID of VIM to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/nfvo": {
+      "get": {
+        "tags": [
+          "NFVO"
+        ],
+        "summary": "Returns a list of registered NFVOs",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/sbi_ls"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "NFVO"
+        ],
+        "summary": "Adds a new NFVO",
+        "requestBody": {
+          "description": "NFVO Parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nfvo"
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "$ref": "#/components/schemas/nfvo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new NFVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/nfvo/{nfvo_id}": {
+      "get": {
+        "tags": [
+          "NFVO"
+        ],
+        "summary": "Returns information about the given NFVO id",
+        "parameters": [
+          {
+            "name": "nfvo_id",
+            "in": "path",
+            "description": "ID of NFVO to be inspected",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/nfvo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "NFVO"
+        ],
+        "summary": "Updates the given NFVO",
+        "parameters": [
+          {
+            "name": "nfvo_id",
+            "in": "path",
+            "description": "ID of NFVO to be updated",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "NFVO Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/nfvo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new NFVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "NFVO"
+        ],
+        "summary": "Deletes the given NFVO",
+        "parameters": [
+          {
+            "name": "nfvo_id",
+            "in": "path",
+            "description": "ID of NFVO to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/wim": {
+      "get": {
+        "tags": [
+          "WIM"
+        ],
+        "summary": "Returns a list of registered WIMs",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/sbi_ls"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WIM"
+        ],
+        "summary": "Adds a new WIM",
+        "requestBody": {
+          "description": "WIM Parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/wim"
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "$ref": "#/components/schemas/wim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new WIM"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/wim/{wim_id}": {
+      "get": {
+        "tags": [
+          "WIM"
+        ],
+        "summary": "Returns information about the given WIM",
+        "parameters": [
+          {
+            "name": "wim_id",
+            "in": "path",
+            "description": "ID of WIM to be inspected",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/wim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "WIM"
+        ],
+        "summary": "Updates the given WIM",
+        "parameters": [
+          {
+            "name": "wim_id",
+            "in": "path",
+            "description": "ID of WIM to be updated",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "WIM Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/wim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new WIM"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "WIM"
+        ],
+        "summary": "Deletes the given WIM",
+        "parameters": [
+          {
+            "name": "wim_id",
+            "in": "path",
+            "description": "ID of WIM to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/ems": {
+      "get": {
+        "tags": [
+          "EMS"
+        ],
+        "summary": "Returns a list of registered EMSs",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/sbi_ls"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "EMS"
+        ],
+        "summary": "Adds a new EMS",
+        "requestBody": {
+          "description": "EMS Parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ems"
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "$ref": "#/components/schemas/ems"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new EMS"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/ems/{ems_id}": {
+      "get": {
+        "tags": [
+          "EMS"
+        ],
+        "summary": "Returns information about the given EMS",
+        "parameters": [
+          {
+            "name": "ems_id",
+            "in": "path",
+            "description": "ID of EMS to be inspected",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "EMS"
+        ],
+        "summary": "Updates the given EMS",
+        "parameters": [
+          {
+            "name": "ems_id",
+            "in": "path",
+            "description": "ID of EMS to be updated",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "EMS Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/ems"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new EMS"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "EMS"
+        ],
+        "summary": "Deletes the given EMS",
+        "parameters": [
+          {
+            "name": "ems_id",
+            "in": "path",
+            "description": "ID of EMS to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/policy": {
+      "get": {
+        "tags": [
+          "Policy Mgmt System"
+        ],
+        "summary": "Returns a list of registered Policy Systems",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/sbi_ls"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policy Mgmt System"
+        ],
+        "summary": "Adds a new Policy Mgmt System",
+        "requestBody": {
+          "description": "Policy Mgmt System Parameters",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/policy"
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "$ref": "#/components/schemas/policy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new Policy System"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/policy/{policy_system_id}": {
+      "get": {
+        "tags": [
+          "Policy Mgmt System"
+        ],
+        "summary": "Returns information about the given Policy Mgmt System",
+        "parameters": [
+          {
+            "name": "policy_system_id",
+            "in": "path",
+            "description": "ID of System to be inspected",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/policy"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Policy Mgmt System"
+        ],
+        "summary": "Updates the given Policy Mgmt System",
+        "parameters": [
+          {
+            "name": "policy_system_id",
+            "in": "path",
+            "description": "ID of Policy Mgmt System to be updated",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "WIM Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/policy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new Policy Mgmt System"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "Policy Mgmt System"
+        ],
+        "summary": "Deletes the given Policy Mgmt System",
+        "parameters": [
+          {
+            "name": "policy_system_id",
+            "in": "path",
+            "description": "ID of Policy Mgmt System to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/policy/neat/{slice_id}": {
+      "get": {
+        "tags": [
+          "Policy Mgmt System"
+        ],
+        "summary": "Sends the slice parameters to the NEAT UE Policy System",
+        "parameters": [
+          {
+            "name": "slice_id",
+            "in": "path",
+            "description": "ID of slice",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "string": {
+                "schema": {
+                  "$ref": "#/components/schemas/gst"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Slice not found",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/resources": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Returns information about the platform resources",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/resources"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/resources/{location}": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Returns information about the platform resources on the specified location",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "path",
+            "description": "Specific location of the platform",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "Location"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/resources"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/function": {
+      "get": {
+        "tags": [
+          "Network Functions"
+        ],
+        "summary": "Returns a list of the Network Function on the platform",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "A list of Network Functions",
+                  "items": {
+                    "$ref": "#/components/schemas/net_func"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Network Functions"
+        ],
+        "summary": "Add a Network Function on the platform",
+        "requestBody": {
+          "description": "Network Functions Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/net_func"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new Network Function"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/function/{func_id}": {
+      "get": {
+        "tags": [
+          "Network Functions"
+        ],
+        "summary": "Return Info about a specific Network Function on the platform",
+        "parameters": [
+          {
+            "name": "func_id",
+            "in": "path",
+            "description": "ID of Network Function",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/net_func"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Network Functions"
+        ],
+        "summary": "Add or update a Network Function on the platform",
+        "parameters": [
+          {
+            "name": "func_id",
+            "in": "path",
+            "description": "ID of Network Function",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Network Function Parameters",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/net_func"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Modified",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new Network Function"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "Network Functions"
+        ],
+        "summary": "Delete a Network Function on the platform",
+        "parameters": [
+          {
+            "name": "func_id",
+            "in": "path",
+            "description": "ID of Network Function",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/nslist": {
+      "get": {
+        "tags": [
+          "Network Service Descriptors"
+        ],
+        "summary": "Returns a list of the available Network Service Descriptors on the all NFVOs registered on the SM",
+        "parameters": [
+          {
+            "name": "nsd-id",
+            "in": "query",
+            "required": false,
+            "description": "The id for a specific NSD",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nfvo-id",
+            "in": "query",
+            "description": "The id for a specific NFVO",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "A list of NSDs",
+                  "items": {
+                    "$ref": "#/components/schemas/nsd",
+                    "description": "An NSD"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/gst": {
+      "get": {
+        "tags": [
+          "Generic Slice Template"
+        ],
+        "summary": "Returns a list of the received GSTs for slice instantiation",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "A list of received GSTs",
+                  "items": {
+                    "type": "string",
+                    "description": "GST Database ID"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/gst/{gst_id}": {
+      "get": {
+        "tags": [
+          "Generic Slice Template"
+        ],
+        "summary": "Return Info about a specific GST",
+        "parameters": [
+          {
+            "name": "gst_id",
+            "in": "path",
+            "description": "ID of GST",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/gst"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/base_slice_des": {
+      "get": {
+        "tags": [
+          "Base Slice Descriptors"
+        ],
+        "summary": "Returns a list of the base slice descriptors that are part of the GST",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "A list of the base slice descriptors",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "DB_ID": {
+                        "type": "string"
+                      },
+                      "Slice_des_ID": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "A list of base slice descriptors"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Base Slice Descriptors"
+        ],
+        "summary": "Defines a new Base Slice Descriptor for the platform",
+        "requestBody": {
+          "description": "Base Slice Descriptor",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/base_slice_des"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new base slice descriptor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/base_slice_des/{id}": {
+      "get": {
+        "tags": [
+          "Base Slice Descriptors"
+        ],
+        "summary": "Return Info about a specific base slice descriptor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of base_slice_des",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/base_slice_des"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Base Slice Descriptors"
+        ],
+        "summary": "Add or update a base slice descriptor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of base_slice_des",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Base Slice Descriptor",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/base_slice_des"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Modified",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new base slice descriptor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "Base Slice Descriptors"
+        ],
+        "summary": "Delete a base slice descriptor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of base_slice_des",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/bootstrap": {
+      "post": {
+        "tags": [
+          "Bootstrap Katana"
+        ],
+        "summary": "Configure Katana using one JSON File. Note that the locations must be already added.",
+        "requestBody": {
+          "description": "Configuration Data",
+          "content": {
+            "Application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/bootstrap"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Configured SM",
+            "content": {}
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {}
+          }
+        }
+      },
+      "x-codegen-request-body-name": "body"
+    },
+    "/location": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Returns a list with the registered locations of the underlying infrastructure",
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "A list of the registered locations",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/components/schemas/stored_location"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Defines a Location for the platform",
+        "requestBody": {
+          "description": "Location descriptor",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/location_descriptor"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/location/{id}": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Return Info about a specific location",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of location",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/stored_location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Add or update a location",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of location",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Location Descriptor",
+          "content": {
+            "Application/Json": {
+              "schema": {
+                "$ref": "#/components/schemas/location_descriptor"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Modified",
+            "content": {}
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "string": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The uuid of the new location"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "body"
+      },
+      "delete": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Delete a base slice descriptor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of location",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {}
+          },
+          "405": {
+            "description": "Invalid Input",
+            "content": {}
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "base_slice_des": {
+        "type": "object",
+        "properties": {
+          "base_slice_des_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Id of the slice descriptor which will be used as base for the gst"
+          },
+          "base_slice_des_ref": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Reference to an added slice descriptor which will be used as base for the gst"
+          },
+          "coverage": {
+            "type": "array",
+            "description": "A list with all the locations that are part of the slice",
+            "items": {
+              "type": "string",
+              "format": "location",
+              "description": " The location name for each site in the slice"
+            }
+          },
+          "delay_tolerance": {
+            "type": "boolean",
+            "description": "Supported or not supported"
+          },
+          "deterministic_communication": {
+            "type": "object",
+            "properties": {
+              "availability": {
+                "type": "boolean",
+                "description": "This parameter describes if the network slice supports deterministic communication."
+              },
+              "periodicity": {
+                "type": "array",
+                "description": "This parameter provides a list of periodicities supported by the network slice.",
+                "items": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Seconds"
+                }
+              }
+            },
+            "description": "This attribute defines if the network slice supports deterministic communication for periodic user traffic. Periodic traffic refers to the type of traffic with periodic transmissions."
+          },
+          "network_DL_throughput": {
+            "type": "object",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              }
+            },
+            "description": "The achievable data rate in downlink for the whole network slice (and not per user)."
+          },
+          "ue_DL_throughput": {
+            "type": "object",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              }
+            },
+            "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in downlink"
+          },
+          "network_UL_throughput": {
+            "type": "object",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              }
+            },
+            "description": "The achievable data rate in uplink for the whole network slice (and not per user)."
+          },
+          "ue_UL_throughput": {
+            "type": "object",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "format": "float",
+                "description": "kbps"
+              }
+            },
+            "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in uplink"
+          },
+          "group_communication_support": {
+            "type": "integer",
+            "description": "0: not available 1: Single Cell Point to Multipoint (SCPTM) 2: Broadcast/Multicast 3: Broadcast/Multicast + SC-PTM"
+          },
+          "isolation": {
+            "type": "number",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "description": " A network slice instance may be fully or partly, isolated from another network slice instance. 0: No Isolation 1: Core Isolation 2: RAN Isolation 3: Both Isolation"
+          },
+          "mtu": {
+            "type": "integer",
+            "description": "Bytes"
+          },
+          "mission_critical_support": {
+            "type": "object",
+            "properties": {
+              "availability": {
+                "type": "boolean"
+              },
+              "mc_service": {
+                "type": "array",
+                "description": "This attribute specifies whether or not the network slice supports MC push-to-talk, MC data, MC video, Isolated E-UTRAN Operation for Public Safety or MC interworking.",
+                "items": {
+                  "type": "integer",
+                  "description": "1: MCPTT 2: MCData 3: MCVideo 4: IOPS 5: MC interworking"
+                }
+              }
+            },
+            "description": "Mission-critical (MC) leads to a priority of the network slice relative to others, for C-plane and U-plane decisions."
+          },
+          "mmtel_support": {
+            "type": "boolean",
+            "description": "This attribute describes whether the network slice supports IP Multimedia Subsystem (IMS) and Multimedia Telephony Service MMTel."
+          },
+          "nb_iot": {
+            "type": "boolean",
+            "description": "This parameter describes whether NB-IoT is supported in the network slice."
+          },
+          "number_of_connections": {
+            "type": "integer",
+            "description": "This attribute describes the maximum number of concurrent sessions supported by the network slice."
+          },
+          "number_of_terminals": {
+            "type": "integer",
+            "description": "This attribute describes the maximum number of concurrent terminals supported by the network slice."
+          },
+          "positional_support": {
+            "type": "object",
+            "properties": {
+              "availability": {
+                "type": "array",
+                "description": "Describes if this attribute is provided by the network slice and contains a list of positioning methods provided by the slice.",
+                "items": {
+                  "type": "integer",
+                  "description": "1: CID 2: E-CID (LTE and NR) 3: OTDOA (LTE and NR) 4: RF fingerprinting 5: AECID 6: Hybrid positioning 7: NET-RTK"
+                }
+              },
+              "frequency": {
+                "type": "integer",
+                "description": "Seconds"
+              },
+              "accuracy": {
+                "type": "integer",
+                "description": "Meters"
+              }
+            },
+            "description": "This attribute describes if the network slice provides geo-localization methods or supporting methods."
+          },
+          "radio_spectrum": {
+            "type": "array",
+            "description": "Defines the radio spectrum supported by the network slice.",
+            "items": {
+              "type": "string",
+              "description": "This attribute simply tells which frequencies can be used to access the network slice. Example: n1, n77, n38"
+            }
+          },
+          "simultaneous_nsi": {
+            "type": "integer",
+            "description": "0: Can be used with any network slice 1: Can be used with network slices with same SST value 2: Can be used with any network slice with same SD value 3: Cannot be used with another network slice 4-15: operator defined class"
+          },
+          "qos": {
+            "type": "array",
+            "description": "This attribute defines all the QoS relevant parameters supported by the network slice, based on 3GPP defined standard values (5QIs)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "qi": {
+                  "type": "integer",
+                  "description": "Based on the table of defined 5QI by 3GPP"
+                },
+                "resource_type": {
+                  "type": "integer",
+                  "description": "0: GBR (Mission Critical Video user plane) 1: Delay critical GBR (Intelligent Transport Systems) 2: Non-GBR (Voice, AR)"
+                },
+                "priority_level": {
+                  "type": "integer",
+                  "description": "Associated with 5G QoS characteristics indicates a priority in scheduling resources among QoS Flows."
+                },
+                "packet_delay_budget": {
+                  "type": "integer",
+                  "description": "The Packet Delay Budget (PDB) defines an upper bound for the time that a packet may be delayed between the UE and the UPF [Seconds]."
+                },
+                "packet_error_rate": {
+                  "type": "integer",
+                  "description": "The Packet Error Rate (PER) defines an upper bound for the rate of packets that are not successfully delivered by the corresponding receiver [percentage]."
+                },
+                "jitter": {
+                  "type": "integer",
+                  "description": "Jitter is defined as a variation in the delay of received packets [Seconds]."
+                },
+                "max_packet_loss_rate": {
+                  "type": "integer",
+                  "description": " the maximum rate for lost packets of the QoS flow that can be tolerated in the uplink (UL) and downlink (DL) direction [percentage]."
+                }
+              },
+              "description": "Refers to 5QI defined in https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3144"
+            }
+          },
+          "nonIP_traffic": {
+            "type": "boolean"
+          },
+          "device_velocity": {
+            "type": "integer",
+            "description": "1: Stationary: 0 km/h 2: Pedestrian: 0 km/h to 10 km/h 3: Vehicular: 10 km/h to 120 km/h 4: High speed vehicular: 120 km/h to 500 km/h"
+          },
+          "terminal_density": {
+            "type": "integer",
+            "description": "maximum number of connected and/or accessible devices per unit area (per km2) supported by the network slice [Number/km^2]"
+          }
+        },
+        "description": "This is the schema for the core part of the new slice"
+      },
+      "service_descriptor": {
+        "type": "object",
+        "properties": {
+          "ns_list": {
+            "type": "array",
+            "description": "List of the NSD to be instantiated alongside the slice",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nsd-id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "The NSD id as defined on the NFVO"
+                },
+                "ns-name": {
+                  "type": "string",
+                  "description": "The name of the NS"
+                },
+                "placement": {
+                  "type": "string",
+                  "description": "1: Deploy on Core - 2: Deploy on all Edge locations of the cloud - Explicitily define a string location (it must be included in the Slice Coverage"
+                }
+              },
+              "description": "A NS"
+            }
+          }
+        },
+        "description": "This is the schema for the Service Descriptor part of slice IM"
+      },
+      "test_descriptor": {
+        "type": "object",
+        "properties": {
+          "probe_list": {
+            "type": "array",
+            "description": "A list of probe ids to be included in the slice",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "performance_monitoring": {
+            "type": "object",
+            "properties": {
+              "availability": {
+                "type": "array",
+                "description": "List of KQIs and KPIs available for monitoring",
+                "items": {
+                  "type": "integer",
+                  "description": "1: Throughput 2: Latency 3: Service Request Success Rate"
+                }
+              },
+              "frequency": {
+                "type": "integer",
+                "description": "Seconds"
+              }
+            },
+            "description": "This attribute provides the capability to monitor KQIs and KPIs."
+          },
+          "performance_prediction": {
+            "type": "object",
+            "properties": {
+              "availability": {
+                "type": "array",
+                "description": "List of KQIs and KPIs available for monitoring",
+                "items": {
+                  "type": "integer",
+                  "description": "1: Throughput 2: Latency 3: Service Request Success Rate"
+                }
+              },
+              "frequency": {
+                "type": "integer",
+                "description": "Seconds"
+              }
+            },
+            "description": "This attribute provides the capability to predict KQIs and KPIs."
+          }
+        },
+        "description": "This is the schema for the Test Descriptor part of slice IM"
+      },
+      "gst": {
+        "type": "object",
+        "properties": {
+          "base_slice_descriptor": {
+            "$ref": "#/components/schemas/base_slice_des"
+          },
+          "service_descriptor": {
+            "$ref": "#/components/schemas/service_descriptor"
+          },
+          "test_descriptor": {
+            "$ref": "#/components/schemas/test_descriptor"
+          }
+        }
+      },
+      "sbi_ls": {
+        "type": "object",
+        "properties": {
+          "DB_ID": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The uuid of the component used by katana DB"
+          },
+          "Component_ID": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The uuid of the component as registered to katana by the admin"
+          },
+          "created at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation time of the component"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the component"
+          }
+        }
+      },
+      "slice_ls": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "created at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "time": {
+        "type": "object",
+        "properties": {
+          "NS_Deployment_Time": {
+            "type": "object",
+            "properties": {
+              "NSi_name": {
+                "type": "number",
+                "description": "Seconds"
+              }
+            }
+          },
+          "Placement_Time": {
+            "type": "number",
+            "description": "Seconds"
+          },
+          "Provisioning_Time": {
+            "type": "number",
+            "description": "Seconds"
+          },
+          "Radio_Configuration_Time": {
+            "type": "number",
+            "description": "Seconds"
+          },
+          "Slice_Deployment_Time": {
+            "type": "number",
+            "description": "Seconds"
+          },
+          "WAN_Deployment_Time": {
+            "type": "number",
+            "description": "Seconds"
+          }
+        },
+        "description": "The Slice Deployment time"
+      },
+      "nsi": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The uuid that is used for storing the NSI in the database"
+          },
+          "created_at": {
+            "type": "number",
+            "format": "date-time"
+          },
+          "deployment_time": {
+            "$ref": "#/components/schemas/time"
+          },
+          "coverage": {
+            "type": "array",
+            "description": "A list with all the locations that are part of the slice",
+            "items": {
+              "type": "string",
+              "description": " The location name for each site in the slice"
+            }
+          },
+          "network_DL_throughput": {
+            "type": "object",
+            "description": "The achievable data rate in downlink for the whole network slice (and not per user).",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "description": "kbps"
+              }
+            }
+          },
+          "ue_DL_throughput": {
+            "type": "object",
+            "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in downlink",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "description": "kbps"
+              }
+            }
+          },
+          "network_UL_throughput": {
+            "type": "object",
+            "description": "The achievable data rate in uplink for the whole network slice (and not per user).",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "description": "kbps"
+              }
+            }
+          },
+          "ue_UL_throughput": {
+            "type": "object",
+            "description": "This attribute describes the guaranteed data rate supported by the network slice per UE in uplink",
+            "properties": {
+              "guaranteed": {
+                "type": "number",
+                "description": "kbps"
+              },
+              "maximum": {
+                "type": "number",
+                "description": "kbps"
+              }
+            }
+          },
+          "group_communication_support": {
+            "type": "number",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "description": "0: not available 1: Single Cell Point to Multipoint (SCPTM) 2: Broadcast/Multicast 3: Broadcast/Multicast + SC-PTM"
+          },
+          "mtu": {
+            "type": "number",
+            "description": "Bytes"
+          },
+          "mission_critical_support": {
+            "type": "object",
+            "description": "Mission-critical (MC) leads to a priority of the network slice relative to others, for C-plane and U-plane decisions.",
+            "properties": {
+              "availability": {
+                "type": "boolean"
+              },
+              "mc_service": {
+                "type": "array",
+                "description": "This attribute specifies whether or not the network slice supports MC push-to-talk, MC data, MC video, Isolated E-UTRAN Operation for Public Safety or MC interworking.",
+                "items": {
+                  "type": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ],
+                  "description": "1: MCPTT 2: MCData 3: MCVideo 4: IOPS 5: MC interworking"
+                }
+              }
+            }
+          },
+          "mmtel_support": {
+            "type": "boolean",
+            "description": "This attribute describes whether the network slice supports IP Multimedia Subsystem (IMS) and Multimedia Telephony Service MMTel."
+          },
+          "nb_iot": {
+            "type": "boolean",
+            "description": "This parameter describes whether NB-IoT is supported in the network slice."
+          },
+          "number_of_connections": {
+            "type": "number",
+            "description": "This attribute describes the maximum number of concurrent sessions supported by the network slice."
+          },
+          "number_of_terminals": {
+            "type": "number",
+            "description": "This attribute describes the maximum number of concurrent terminals supported by the network slice."
+          },
+          "positional_support": {
+            "type": "object",
+            "description": "This attribute describes if the network slice provides geo-localization methods or supporting methods.",
+            "properties": {
+              "availability": {
+                "type": "array",
+                "description": "Describes if this attribute is provided by the network slice and contains a list of positioning methods provided by the slice.",
+                "items": {
+                  "type": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                  ],
+                  "description": "1: CID 2: E-CID (LTE and NR) 3: OTDOA (LTE and NR) 4: RF fingerprinting 5: AECID 6: Hybrid positioning 7: NET-RTK"
+                }
+              },
+              "frequency": {
+                "type": "number",
+                "description": "Seconds"
+              },
+              "accuracy": {
+                "type": "number",
+                "description": "Meters"
+              }
+            }
+          },
+          "radio_spectrum": {
+            "type": "array",
+            "description": "Defines the radio spectrum supported by the network slice.",
+            "items": {
+              "type": "string",
+              "description": "This attribute simply tells which frequencies can be used to access the network slice. Example: n1, n77, n38"
+            }
+          },
+          "qos": {
+            "type": "array",
+            "description": "This attribute defines all the QoS relevant parameters supported by the network slice, based on 3GPP defined standard values (5QIs)",
+            "items": {
+              "type": "object",
+              "description": "Refers to 5QI defined in https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3144",
+              "properties": {
+                "qi": {
+                  "type": "number",
+                  "description": "Based on the table of defined 5QI by 3GPP"
+                },
+                "resource_type": {
+                  "type": "number",
+                  "enum": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "description": "0: GBR (Mission Critical Video user plane) 1: Delay critical GBR (Intelligent Transport Systems) 2: Non-GBR (Voice, AR)"
+                },
+                "priority_level": {
+                  "type": "number",
+                  "description": "Associated with 5G QoS characteristics indicates a priority in scheduling resources among QoS Flows."
+                },
+                "packet_delay_budget": {
+                  "type": "number",
+                  "description": "The Packet Delay Budget (PDB) defines an upper bound for the time that a packet may be delayed between the UE and the UPF [Seconds]."
+                },
+                "packet_error_rate": {
+                  "type": "number",
+                  "description": "The Packet Error Rate (PER) defines an upper bound for the rate of packets that are not successfully delivered by the corresponding receiver [percentage]."
+                },
+                "jitter": {
+                  "type": "number",
+                  "description": "Jitter is defined as a variation in the delay of received packets [Seconds]."
+                },
+                "max_packet_loss_rate": {
+                  "type": "number",
+                  "description": " the maximum rate for lost packets of the QoS flow that can be tolerated in the uplink (UL) and downlink (DL) direction [percentage."
+                }
+              }
+            }
+          },
+          "nonIP_traffic": {
+            "type": "boolean"
+          },
+          "device_velocity": {
+            "type": "number",
+            "enum": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "description": "1: Stationary: 0 km/h 2: Pedestrian: 0 km/h to 10 km/h 3: Vehicular: 10 km/h to 120 km/h 4: High speed vehicular: 120 km/h to 500 km/h"
+          },
+          "terminal_density": {
+            "type": "number",
+            "description": "maximum number of connected and/or accessible devices per unit area (per km2) supported by the network slice [Number/km^2]"
+          },
+          "probe_list": {
+            "type": "array",
+            "description": "A list of probe ids to be included in the slice",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "Init, Peovisioning, Activation, Running or Terminating"
+          },
+          "connections": {
+            "type": "array",
+            "description": "A list of 5G service connections. Each connection contains a core and a radio endpoint. The endpoints are selected from the platform fanctions repository of the Slice Manager",
+            "items": {
+              "type": "object",
+              "description": "A 5G service connections. Each connection contains a core and a radio endpoint. The endpoints are selected from the platform fanctions repository of the Slice Manager",
+              "properties": {
+                "core": {
+                  "type": "object",
+                  "description": "The Core part of the 5G service connection",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "The uuid of the function that is used in the database"
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "A unique ID of the function"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the function"
+                    },
+                    "gen": {
+                      "type": "number",
+                      "enum": [
+                        4,
+                        5
+                      ],
+                      "description": "Type of the network function - 4: 4G, 5: 5G"
+                    },
+                    "func": {
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1
+                      ],
+                      "description": "0: Core, 1: Radio"
+                    },
+                    "shared": {
+                      "type": "object",
+                      "description": "Defines if the function can be shared between different slices",
+                      "properties": {
+                        "availability": {
+                          "type": "boolean",
+                          "description": "true: shared, false: no shared"
+                        },
+                        "max_shared": {
+                          "type": "number",
+                          "description": "Max number of slices - If availability is true and max_shared not defined, it will be assumed unlimited availability"
+                        }
+                      },
+                      "required": [
+                        "availability"
+                      ]
+                    },
+                    "type": {
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1
+                      ],
+                      "description": "0: Virtual, 1: Physical"
+                    },
+                    "location": {
+                      "type": "string",
+                      "description": "Supported location"
+                    },
+                    "ns_list": {
+                      "type": "array",
+                      "description": "Conditional - If type == Virtual - A list of the NSs that will be part of the slice",
+                      "items": {
+                        "type": "object",
+                        "description": "A Network Service",
+                        "properties": {
+                          "nsd-id": {
+                            "type": "string",
+                            "description": "The NSD id as defined on the NFVO"
+                          },
+                          "ns-name": {
+                            "type": "string",
+                            "description": "The name of the NS"
+                          },
+                          "placement": {
+                            "type": "number",
+                            "enum": [
+                              0,
+                              1
+                            ],
+                            "description": "1: Core, 2: Edge"
+                          },
+                          "optional": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "pnf_list": {
+                      "type": "array",
+                      "description": "Conditional - If type == Physical - A list of the PNFs that will be part of the slice",
+                      "items": {
+                        "type": "object",
+                        "description": "A Physical Network Service",
+                        "properties": {
+                          "pnf-id": {
+                            "type": "string",
+                            "description": "A Unique ID of the pnf"
+                          },
+                          "pnf-name": {
+                            "type": "string",
+                            "description": "The name of the PNF"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "ip": {
+                            "type": "string",
+                            "description": "The management IP of the PNF"
+                          },
+                          "ip_s1": {
+                            "type": "string",
+                            "description": "Optional - The IP of the S1 Interface"
+                          },
+                          "location": {
+                            "type": "string",
+                            "description": "The location of the PNF"
+                          },
+                          "optional": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "ems-id": {
+                      "type": "string",
+                      "description": "Optional - Defines the EMS that is responsible for D1&2 configuration"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "functions": {
+            "type": "array",
+            "description": "A list of all the functions that are used in the slice",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "conf_comp": {
+            "type": "object",
+            "description": "The items components that have been configured by the ems"
+          },
+          "ns_list": {
+            "type": "array",
+            "description": "A list of the instantiated NSs",
+            "items": {
+              "type": "object",
+              "description": "A Network Service",
+              "properties": {
+                "nsd-id": {
+                  "type": "string",
+                  "description": "The NSD id as defined on the NFVO"
+                },
+                "ns-name": {
+                  "type": "string",
+                  "description": "The name of the NS"
+                },
+                "placement": {
+                  "type": "number",
+                  "enum": [
+                    0,
+                    1
+                  ],
+                  "description": "1: Core, 2: Edge"
+                },
+                "optional": {
+                  "type": "boolean"
+                },
+                "nsd-info": {
+                  "type": "object",
+                  "description": "Information about the NS Descriptor",
+                  "properties": {
+                    "_id": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "vnfd_list": {
+                      "type": "array",
+                      "description": "The list of VNFDs in the NSD",
+                      "items": {
+                        "type": "string",
+                        "description": "A VNFD"
+                      }
+                    },
+                    "flavor": {
+                      "type": "object",
+                      "properties": {
+                        "memory-mb": {
+                          "type": "integer"
+                        },
+                        "vcpu-count": {
+                          "type": "integer"
+                        },
+                        "storage-gb": {
+                          "type": "integer"
+                        }
+                      },
+                      "description": "The NS requirements"
+                    },
+                    "nfvo-id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                },
+                "placement_loc": {
+                  "type": "object",
+                  "description": "Detailed info regarding the placement of the NS",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "description": "The location where the NS is running"
+                    },
+                    "vim": {
+                      "type": "string",
+                      "description": "The VIM ID of the location where the NS is hosted"
+                    }
+                  }
+                },
+                "vims": {
+                  "type": "array",
+                  "description": "The list of VIMs used for the NS",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The uuid of the VIM"
+                  }
+                }
+              }
+            }
+          },
+          "wim_data": {
+            "type": "object",
+            "description": "The data that was sent to WIM",
+            "properties": {
+              "slice_sla": {
+                "type": "object",
+                "description": "Slice parameteres as defiend in NEST",
+                "properties": {
+                  "network_DL_throughput": {
+                    "type": "object",
+                    "description": "The achievable data rate in downlink for the whole network slice (and not per user).",
+                    "properties": {
+                      "guaranteed": {
+                        "type": "number",
+                        "description": "kbps"
+                      },
+                      "maximum": {
+                        "type": "number",
+                        "description": "kbps"
+                      }
+                    }
+                  },
+                  "network_UL_throughput": {
+                    "type": "object",
+                    "description": "The achievable data rate in uplink for the whole network slice (and not per user).",
+                    "properties": {
+                      "guaranteed": {
+                        "type": "number",
+                        "description": "kbps"
+                      },
+                      "maximum": {
+                        "type": "number",
+                        "description": "kbps"
+                      }
+                    }
+                  },
+                  "mtu": {
+                    "type": "number",
+                    "description": "Bytes"
+                  }
+                }
+              },
+              "core_connections": {
+                "type": "array",
+                "description": "List of connections that are part of the slice and must be implemented by the WIM",
+                "items": {
+                  "type": "object",
+                  "description": "The endpoints of the connections",
+                  "properties": {
+                    "core": {
+                      "type": "object",
+                      "description": "The core part of the radio connection",
+                      "properties": {
+                        "ns": {
+                          "type": "array",
+                          "description": "A list of VIMs where the NSs have been instantiated",
+                          "items": {
+                            "type": "object",
+                            "description": "A VIM hosting NSs",
+                            "properties": {
+                              "location": {
+                                "type": "string",
+                                "description": "The location of the VIM"
+                              },
+                              "vim": {
+                                "type": "string",
+                                "description": "The ID of the VIM"
+                              }
+                            }
+                          }
+                        },
+                        "pnf": {
+                          "type": "array",
+                          "description": "A list of the PNFs that are part of the slice",
+                          "items": {
+                            "type": "object",
+                            "description": "A Physical Network Service",
+                            "properties": {
+                              "pnf-id": {
+                                "type": "string",
+                                "description": "A Unique ID of the pnf"
+                              },
+                              "pnf-name": {
+                                "type": "string",
+                                "description": "The name of the PNF"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "ip": {
+                                "type": "string",
+                                "description": "The management IP of the PNF"
+                              },
+                              "ip_s1": {
+                                "type": "string",
+                                "description": "Optional - The IP of the S1 Interface"
+                              },
+                              "location": {
+                                "type": "string",
+                                "description": "The location of the PNF"
+                              },
+                              "optional": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "radio": {
+                      "type": "object",
+                      "description": "The core part of the radio connection",
+                      "properties": {
+                        "ns": {
+                          "type": "array",
+                          "description": "A list of VIMs where the NSs have been instantiated",
+                          "items": {
+                            "type": "object",
+                            "description": "A VIM hosting NSs",
+                            "properties": {
+                              "location": {
+                                "type": "string",
+                                "description": "The location of the VIM"
+                              },
+                              "vim": {
+                                "type": "string",
+                                "description": "The ID of the VIM"
+                              }
+                            }
+                          }
+                        },
+                        "pnf": {
+                          "type": "array",
+                          "description": "A list of the PNFs that are part of the slice",
+                          "items": {
+                            "type": "object",
+                            "description": "A Physical Network Service",
+                            "properties": {
+                              "pnf-id": {
+                                "type": "string",
+                                "description": "A Unique ID of the pnf"
+                              },
+                              "pnf-name": {
+                                "type": "string",
+                                "description": "The name of the PNF"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "ip": {
+                                "type": "string",
+                                "description": "The management IP of the PNF"
+                              },
+                              "ip_s1": {
+                                "type": "string",
+                                "description": "Optional - The IP of the S1 Interface"
+                              },
+                              "location": {
+                                "type": "string",
+                                "description": "The location of the PNF"
+                              },
+                              "optional": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "extra_ns": {
+                "type": "array",
+                "description": "A list of VIMs where the NSs that are not part of the core slice have been instantiated",
+                "items": {
+                  "type": "object",
+                  "description": "A VIM hosting NSs",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "description": "The location of the VIM"
+                    },
+                    "vim": {
+                      "type": "string",
+                      "description": "The ID of the VIM"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "vim": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for the new VIM"
+          },
+          "auth_url": {
+            "type": "string",
+            "description": "VIM's authentication URL - example: http://10.200.64.2:5000/v3/"
+          },
+          "username": {
+            "type": "string",
+            "description": "The admin username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "The admin password"
+          },
+          "admin_project_name": {
+            "type": "string",
+            "description": "The admin project"
+          },
+          "location": {
+            "type": "string",
+            "description": "VIM's location"
+          },
+          "type": {
+            "type": "string",
+            "description": "VIM's type"
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the VIM's OS"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the VIM"
+          },
+          "infrastructure_monitoring": {
+            "type": "string",
+            "description": "Optional - The URL of the Prometheus system that is responsible for monitoring the VIM"
+          },
+          "config": {
+            "type": "object",
+            "properties": {},
+            "description": "Optional parameters regarding the VIM operation - example: Security group"
+          }
+        },
+        "description": "A new VIM",
+        "required": [
+          "id",
+          "auth_url",
+          "username",
+          "password",
+          "admin_project_name"
+        ]
+      },
+      "nfvo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for the new NFVO"
+          },
+          "nfvoip": {
+            "type": "string",
+            "description": "NFVO's authentication URL - example: http://10.200.64.2:5000/v3/"
+          },
+          "nfvousername": {
+            "type": "string",
+            "description": "The admin username"
+          },
+          "nfvopassword": {
+            "type": "string",
+            "format": "password",
+            "description": "The admin password"
+          },
+          "type": {
+            "type": "string",
+            "description": "NFVO's type"
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the NFVO's OS"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the NFVO"
+          },
+          "config": {
+            "type": "object",
+            "properties": {},
+            "description": "Optional parameters regarding the NFVO operation - example: network: flat"
+          }
+        },
+        "description": "A new NFVO",
+        "required": [
+          "id",
+          "nfvousername",
+          "nfvopassword",
+          "nfvoip",
+          "tenantname"
+        ]
+      },
+      "wim": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for the new WIM"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the WIM"
+          },
+          "url": {
+            "type": "string",
+            "description": "WIM's authentication URL - example: http://10.200.64.2:5000/"
+          },
+          "type": {
+            "type": "string",
+            "description": "WIM's type"
+          }
+        },
+        "description": "A new WIM",
+        "required": [
+          "id",
+          "url",
+          "type"
+        ]
+      },
+      "ems": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for the new EMS"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the EMS"
+          },
+          "url": {
+            "type": "string",
+            "description": "EMS' authentication URL - example: http://10.200.64.2:5000/"
+          },
+          "type": {
+            "type": "string",
+            "description": "EMS' type"
+          }
+        },
+        "description": "A new EMS",
+        "required": [
+          "id",
+          "url",
+          "type"
+        ]
+      },
+      "resources": {
+        "type": "object",
+        "properties": {
+          "VIMs": {
+            "type": "array",
+            "description": "A list of all the available VIMs",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "tenants": {
+                  "type": "object",
+                  "properties": {},
+                  "description": "Tenants created on the VIM"
+                },
+                "max_resources": {
+                  "type": "object",
+                  "properties": {
+                    "CPUs": {
+                      "type": "integer"
+                    },
+                    "RAM": {
+                      "type": "integer"
+                    },
+                    "Disk": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "available_resources": {
+                  "type": "object",
+                  "properties": {
+                    "CPUs": {
+                      "type": "integer"
+                    },
+                    "RAM": {
+                      "type": "integer"
+                    },
+                    "Disk": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "description": "A VIM"
+            }
+          },
+          "Functions": {
+            "type": "array",
+            "description": "A list of all the available PDUs",
+            "items": {
+              "type": "object",
+              "properties": {
+                "DB_ID": {
+                  "type": "string",
+                  "description": "The id of the function in the Slice Manager DB",
+                  "format": "uuid"
+                },
+                "function_id": {
+                  "type": "string",
+                  "description": "The unique ID for this network function",
+                  "format": "uuid"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "gen": {
+                  "type": "string",
+                  "description": "4G or 5G Generation Component"
+                },
+                "functionality": {
+                  "type": "string",
+                  "description": "Core/Radio"
+                },
+                "shared": {
+                  "type": "object",
+                  "description": "Availability to be shared amongst many network slices",
+                  "properties": {
+                    "availability": {
+                      "type": "boolean",
+                      "description": "Available for sharing"
+                    },
+                    "max_shared": {
+                      "type": "integer",
+                      "description": "Max number of slices - If availability is true and max_shared not defined, it will be assumed unlimited availability"
+                    }
+                  }
+                },
+                "pnf_list": {
+                  "type": "array",
+                  "description": "Conditional - If type == Physical - A list of the PNFs that will be part of the slice",
+                  "items": {
+                    "type": "object",
+                    "description": "A Physical Network Service",
+                    "properties": {
+                      "pnf-id": {
+                        "type": "string",
+                        "description": "A Unique ID of the pnf"
+                      },
+                      "pnf-name": {
+                        "type": "string",
+                        "description": "The name of the PNF"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "ip": {
+                        "type": "string",
+                        "description": "The management IP of the PNF"
+                      },
+                      "ip_s1": {
+                        "type": "string",
+                        "description": "Optional - The IP of the S1 Interface"
+                      },
+                      "location": {
+                        "type": "string",
+                        "description": "The location of the PNF"
+                      },
+                      "optional": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "tenants": {
+                  "type": "array",
+                  "description": "A list of Tenants using the PDU",
+                  "items": {
+                    "type": "string",
+                    "description": "Tenant id"
+                  }
+                }
+              },
+              "description": "A PDU"
+            }
+          }
+        }
+      },
+      "policy": {
+        "type": "object",
+        "description": "A new Policy Management System",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique id"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL of the Policy Management System"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the Policy Management System"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type for new Policy Management System"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "type"
+        ]
+      },
+      "net_func": {
+        "type": "object",
+        "description": "A core slice network function",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique ID for this network function"
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional name for the network function"
+          },
+          "gen": {
+            "type": "number",
+            "enum": [
+              4,
+              5
+            ],
+            "description": "Type of the network function - 4: 4G, 5: 5G"
+          },
+          "func": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "0: Core, 1: Radio"
+          },
+          "shared": {
+            "type": "object",
+            "description": "Defines if the function can be shared between different slices",
+            "properties": {
+              "availability": {
+                "type": "boolean",
+                "description": "true: shared, false: no shared"
+              },
+              "max_shared": {
+                "type": "number",
+                "description": "Max number of slices - If availability is true and max_shared not defined, it will be assumed unlimited availability"
+              }
+            },
+            "required": [
+              "availability"
+            ]
+          },
+          "type": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "0: Virtual, 1: Physical"
+          },
+          "location": {
+            "type": "string",
+            "description": "Supported location"
+          },
+          "ns_list": {
+            "type": "array",
+            "description": "Conditional - If type == Virtual - A list of the NSs that will be part of the slice",
+            "items": {
+              "$ref": "#/components/schemas/ns"
+            }
+          },
+          "pnf_list": {
+            "type": "array",
+            "description": "Conditional - If type == Physical - A list of the PNFs that will be part of the slice",
+            "items": {
+              "$ref": "#/components/schemas/pnf"
+            }
+          },
+          "ems-id": {
+            "type": "string",
+            "description": "Optional - Defines the EMS that is responsible for D1&2 configuration"
+          },
+          "other_required_functions": {
+            "type": "array",
+            "description": "A list with the IDs of other functions that are required to be deployed along with this",
+            "items": {
+              "type": "string",
+              "description": "ID of a network function"
+            }
+          },
+          "other_supported_functions": {
+            "type": "array",
+            "description": "A list with the IDs of other functions that can be deployed along with this",
+            "items": {
+              "type": "string",
+              "description": "ID of a network function"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "gen",
+          "func",
+          "shared",
+          "type",
+          "location"
+        ]
+      },
+      "ns": {
+        "type": "object",
+        "description": "A Network Service",
+        "properties": {
+          "nsd-id": {
+            "type": "string",
+            "description": "The NSD id as defined on the NFVO"
+          },
+          "ns-name": {
+            "type": "string",
+            "description": "The name of the NS"
+          },
+          "placement": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "1: Core, 2: Edge"
+          },
+          "optional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "pnf": {
+        "type": "object",
+        "description": "A Physical Network Service",
+        "properties": {
+          "pnf-id": {
+            "type": "string",
+            "description": "A Unique ID of the pnf"
+          },
+          "pnf-name": {
+            "type": "string",
+            "description": "The name of the PNF"
+          },
+          "description": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string",
+            "description": "The management IP of the PNF"
+          },
+          "ip_s1": {
+            "type": "string",
+            "description": "Optional - The IP of the S1 Interface"
+          },
+          "location": {
+            "type": "string",
+            "description": "The location of the PNF"
+          },
+          "optional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "nsd": {
+        "type": "object",
+        "description": "A NSD",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The id on the SM Database"
+          },
+          "nfvo_id": {
+            "type": "string",
+            "description": "The id of the NFVO where the NSD is onboarded"
+          },
+          "nsd_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The id of the NSD as it is stored in the NFVO"
+          },
+          "nsd_name": {
+            "type": "string",
+            "description": "The name of the NSD as it is stored in the NFVO"
+          },
+          "vnfd_list": {
+            "type": "array",
+            "description": "The list of VNFDs in the NSD",
+            "items": {
+              "type": "string",
+              "description": "VNFD name"
+            }
+          },
+          "flavor": {
+            "type": "object",
+            "description": "Total resource requirements for the NSD Deployment",
+            "properties": {
+              "instances": {
+                "type": "number",
+                "description": "The number of VMs that will be deployed as part of the NS"
+              },
+              "memory-mb": {
+                "type": "number",
+                "description": "The total amount of required RAM in megabytes"
+              },
+              "storage-gb": {
+                "type": "number",
+                "description": "The total amount of required disk storage in gigabytes"
+              },
+              "vcpu-count": {
+                "type": "number",
+                "description": "The total amount of required virtual cpus"
+              }
+            }
+          }
+        }
+      },
+      "bootstrap": {
+        "type": "object",
+        "description": "Katana configuration data",
+        "properties": {
+          "vim": {
+            "type": "array",
+            "description": "A list with the VIM components to be added",
+            "items": {
+              "$ref": "#/components/schemas/vim"
+            }
+          },
+          "nfvo": {
+            "type": "array",
+            "description": "A list with the NFVO components to be added",
+            "items": {
+              "$ref": "#/components/schemas/nfvo"
+            }
+          },
+          "wim": {
+            "type": "array",
+            "description": "A list with the WIM components to be added",
+            "items": {
+              "$ref": "#/components/schemas/wim"
+            }
+          },
+          "ems": {
+            "type": "array",
+            "description": "A list with the EMS components to be added",
+            "items": {
+              "$ref": "#/components/schemas/ems"
+            }
+          },
+          "function": {
+            "type": "array",
+            "description": "A list with the Network Functions to be added",
+            "items": {
+              "$ref": "#/components/schemas/net_func"
+            }
+          }
+        }
+      },
+      "location_descriptor": {
+        "type": "object",
+        "description": "Descriptor of a registered location",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique ID for this location"
+          },
+          "description": {
+            "type": "string",
+            "description": "A brief description of this location"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "stored_location": {
+        "type": "object",
+        "description": "Descriptor of a stored location",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique ID for this location"
+          },
+          "description": {
+            "type": "string",
+            "description": "A brief description of this location"
+          },
+          "created at": {
+            "type": "number",
+            "format": "date-time"
+          },
+          "vims": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "IDs of the VIMs in this location"
+            }
+          },
+          "functions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "IDs of the Functions in this location"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+    "datasource": "katana-prometheus",
+    "fieldConfig": {
+        "defaults": {
+            "custom": {
+                "align": null,
+                "displayMode": "color-background"
+            },
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                    {
+                        "color": "purple",
+                        "value": null
+                    },
+                    {
+                        "color": "green",
+                        "value": 1
+                    },
+                    {
+                        "color": "red",
+                        "value": 2
+                    },
+                    {
+                        "color": "red",
+                        "value": 3
+                    },
+                    {
+                        "color": "yellow",
+                        "value": 4
+                    }
+                ]
+            },
+            "mappings": [
+                {
+                    "id": 0,
+                    "text": "Running",
+                    "type": 1,
+                    "value": "1"
+                },
+                {
+                    "id": 1,
+                    "text": "Terminated",
+                    "type": 1,
+                    "value": "2"
+                },
+                {
+                    "id": 2,
+                    "text": "Error",
+                    "type": 1,
+                    "value": "3"
+                },
+                {
+                    "id": 3,
+                    "text": "Terminating",
+                    "type": 1,
+                    "value": "4"
+                },
+                {
+                    "id": 4,
+                    "text": "AdminStopped",
+                    "type": 1,
+                    "value": "5"
+                }
+            ]
+        },
+        "overrides": []
+    },
+    "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+    },
+    "id": 1,
+    "options": {
+        "showHeader": true
+    },
+    "pluginVersion": "7.0.4",
+    "targets": [],
+    "timeFrom": null,
+    "timeShift": null,
+    "title": "Network Service Status",
+    "transformations": [
+        {
+            "id": "organize",
+            "options": {
+                "excludeByName": {
+                    "Time": true,
+                    "__name__": true,
+                    "instance": true,
+                    "job": true,
+                    "slice_id": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                    "Value": "Status",
+                    "ns_name": "NS Name"
+                }
+            }
+        }
+    ],
+    "type": "table"
+}

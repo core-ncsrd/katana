@@ -1,0 +1,224 @@
+#!python
+
+"""
+Script that creates slice based on the provided NEST, gets the Service Createion Time and
+exports that to an InfluxDB and to a CSV file
+
+To use run:
+sct --url URL --nest NEST --iterations I --database DB_URL --csv CSV
+
+--url/-u: Katana Slice Manager host:port
+--nest/-n: NEST JSON File
+--iterations/-i: Number of iterations (default=25)
+--database/-d: Export the measurements to an influxDB DB_URL: username:password@host:port/db
+--csv: Export the measurements to a CSV file
+"""
+
+import argparse
+import csv
+import json
+import logging
+import re
+import sys
+import time
+
+from influxdb import InfluxDBClient
+import requests
+
+# Create the logger
+logger = logging.getLogger(__name__)
+stream_handler = logging.StreamHandler()
+stream_formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+stream_handler.setFormatter(stream_formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(stream_handler)
+
+# Get the arguments
+parser = argparse.ArgumentParser(description="Service Creation Time Script")
+parser.add_argument(
+    "--url", "-u", dest="base_url", required=True, type=str, help="Provide Katana Slice Manager URL"
+)
+parser.add_argument(
+    "--nest", "-n", required=True, type=str, help="Provide the NEST for the slice creation"
+)
+parser.add_argument(
+    "--iterations",
+    "-i",
+    type=int,
+    required=False,
+    default=25,
+    help="Provide the number of iterations",
+)
+parser.add_argument(
+    "--database", "-d", required=False, default=None, help="Define the database URL"
+)
+parser.add_argument(
+    "-c",
+    "--csv",
+    dest="csv_file",
+    required=False,
+    help="Set this option in order to write the output to a CSV file",
+    default=None,
+)
+
+args = parser.parse_args()
+base_url = args.base_url
+iterations = args.iterations
+nest = args.nest
+db = args.database
+csv_file = args.csv_file
+
+logger.info(f"URL: {base_url}, iterations: {iterations}, NEST: {nest}, DB: {db}")
+
+output_file, csv_writer, client = None, None, None
+# If DB is not set, create the csv file
+if not db or csv:
+    csv_output = csv_file or "output.csv"
+    output_file = open(csv_output, mode="w")
+    fields = [
+        "Placement_Time",
+        "Provisioning_Time",
+        "WAN_Deployment_Time",
+        "NS_Deployment_Time",
+        "Radio_Configuration_Time",
+        "Slice_Deployment_Time",
+        "Iteration",
+    ]
+    csv_writer = csv.DictWriter(output_file, fieldnames=fields)
+    csv_writer.writeheader()
+
+# Configure the database
+if db:
+    try:
+        user, password = db.split("@")[0].split(":")
+        hostport, db_name = db.split("@")[1].split("/")
+        host, port = hostport.split(":")
+    except (NameError, ValueError):
+        logger.error("Invalid db url - username:password@host:port/db")
+        sys.exit(1)
+        exit()
+    client = InfluxDBClient(host=host, port=int(port), username=user, password=password)
+    database_list = client.get_list_database()
+    # Create the database if it is not there
+    if {"name": db_name} not in database_list:
+        logger.info("Database was not found - Created")
+        client.create_database(db_name)
+    # Change to the db
+    client.switch_database(db_name)
+
+# Check and format the SM URL if needed
+if not re.search(r"http", base_url):
+    base_url = "http://" + base_url + "/api/slice"
+
+# Open the NEST file and read the data
+try:
+    nest_file = open(nest, mode="r")
+except FileNotFoundError as err:
+    print(err)
+    sys.exit(1)
+    exit()
+else:
+    with nest_file:
+        nest_data = json.load(nest_file)
+
+# Start the iteration
+for iter_ in range(iterations):
+    # Create Slice and get the slice id
+    headers = {"Content-type": "Application/json"}
+    try:
+        slice_req = requests.post(
+            url=base_url, data=json.dumps(nest_data), headers=headers, timeout=30
+        )
+    except requests.exceptions.HTTPError as errh:
+        logger.error("Http Error:", errh)
+        exit(1)
+    except requests.exceptions.ConnectionError as errc:
+        logger.error("Error Connecting:", errc)
+        exit(1)
+    except requests.exceptions.Timeout as errt:
+        logger.error("Timeout Error:", errt)
+        exit(1)
+    except requests.exceptions.RequestException as err:
+        logger.error("Error:", err)
+        exit(1)
+    slice_id = (slice_req.content).decode("utf-8")
+    slice_url = f"{base_url}/{slice_id}"
+
+    time.sleep(5)
+    # Wait for the slice to be running
+    while True:
+        try:
+            slice_req = requests.get(url=slice_url)
+        except requests.exceptions.HTTPError as errh:
+            logger.error("Http Error:", errh)
+            exit(1)
+        except requests.exceptions.ConnectionError as errc:
+            logger.error("Error Connecting:", errc)
+            exit(1)
+        except requests.exceptions.Timeout as errt:
+            logger.error("Timeout Error:", errt)
+            exit(1)
+        except requests.exceptions.RequestException as err:
+            logger.error("Error:", err)
+            exit(1)
+        slice_info = slice_req.json()
+        if slice_info.get("status") == "Running":
+            break
+        time.sleep(5)
+    logger.info(f"Created slice {iter_}")
+
+    # Get creation time
+    creation_time = slice_info.get("deployment_time")
+    # Calculate the NS deployment time
+    ns_depl_time = 0.0
+    for ns, ns_time in creation_time["NS_Deployment_Time"].items():
+        ns_depl_time += float(ns_time)
+    creation_time["NS_Deployment_Time"] = ns_depl_time
+
+    # Add the iteration
+    creation_time["Iteration"] = iter_
+
+    # Write the csv file
+    if csv_writer:
+        csv_writer.writerow(creation_time)
+
+    # Write the data to the database
+    if db:
+        write_db = client.write_points(
+            [
+                {
+                    "measurement": "th_script",
+                    "time": time.strftime("%x %X", time.localtime()),
+                    "fields": creation_time,
+                }
+            ]
+        )
+        if write_db:
+            logger.info("Successfully inserted measurements into DB")
+
+    # Remove Slice
+    try:
+        requests.delete(url=slice_url)
+    except requests.exceptions.HTTPError as errh:
+        logger.error("Http Error:", errh)
+        exit(1)
+    except requests.exceptions.ConnectionError as errc:
+        logger.error("Error Connecting:", errc)
+        exit(1)
+    except requests.exceptions.Timeout as errt:
+        logger.error("Timeout Error:", errt)
+        exit(1)
+    except requests.exceptions.RequestException as err:
+        logger.error("Error:", err)
+        exit(1)
+    # Wait until the slice is removed
+    while True:
+        slice_req = requests.get(url=slice_url)
+        if slice_req.status_code == 404:
+            break
+        time.sleep(5)
+
+    logger.info(f"Terminated slice {iter_}")
+
+if csv_writer:
+    output_file.close()

@@ -1,0 +1,8 @@
+# CLI.
+Click==6.7
+
+# requests (for HTTP)
+requests
+
+# yaml
+PyYAML==5.4

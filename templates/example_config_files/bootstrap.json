@@ -1,0 +1,212 @@
+{
+    "vim": [
+        {
+            "id": "mnl_cloud",
+            "name": "core_vim",
+            "auth_url": "http://10.200.64.2:5000/v3/",
+            "username": "admin",
+            "password": "*****",
+            "admin_project_name": "admin",
+            "location": "Core",
+            "type": "openstack",
+            "version": "Queens",
+            "description": "Core VIM - MNL Cloud",
+            "infrastructure_monitoring": "10.30.0.224:9177",
+            "config": {
+                "security_groups": "TBD"
+            }
+        },
+        {
+            "id": "minilab_vim",
+            "name": "minilab_vim",
+            "auth_url": "http://10.100.128.2:5000/v3/",
+            "username": "admin",
+            "password": "*****",
+            "admin_project_name": "admin",
+            "location": "Minilab",
+            "type": "openstack",
+            "version": "Queens",
+            "description": "Edge VIM - IoRL/Minilab",
+            "config": {
+                "security_groups": "TBD"
+            }
+        },
+        {
+            "id": "stein_vim",
+            "name": "core_stein_vim",
+            "auth_url": "http://172.22.22.87:5000/v3/",
+            "username": "admin",
+            "password": "*****",
+            "admin_project_name": "admin",
+            "location": "Core",
+            "type": "openstack",
+            "version": "Stein",
+            "description": "Core VIM - MNL Cloud",
+            "config": {
+                "security_groups": "TBD"
+            }
+        }
+    ],
+    "nfvo": [
+        {
+            "id": "OSM5",
+            "name": "Athens OSM5",
+            "nfvoip": "10.200.64.55",
+            "nfvousername": "admin",
+            "nfvopassword": "*****",
+            "tenantname": "admin",
+            "type": "OSM",
+            "version": "5",
+            "description": "NCSRD OSM Release 5",
+            "config": {}
+        },
+        {
+            "id": "OSM8",
+            "name": "Athens OSM8",
+            "nfvoip": "10.100.16.166",
+            "nfvousername": "admin",
+            "nfvopassword": "******",
+            "tenantname": "admin",
+            "type": "OSM",
+            "version": "8",
+            "description": "NCSRD OSM Release 8",
+            "config": {}
+        }
+    ],
+    "ems": [
+        {
+            "id": "test-ems",
+            "name": "test-ems",
+            "description": "Test EMS",
+            "url": "http://10.30.0.245:8000/api",
+            "type": "test-ems"
+        },
+        {
+            "id": "amarisoft-ems",
+            "name": "athens_ems",
+            "description": "Athens Platform EMS",
+            "url": "http://10.30.0.175:5000",
+            "type": "amarisoft-ems"
+        }
+    ],
+    "wim": [
+        {
+            "id": "test-wim",
+            "name": "test-wim",
+            "description": "Test Katana WIM",
+            "url": "http://10.30.0.245:8000/api",
+            "type": "test-wim",
+            "monitoring-url": "10.200.64.55:9091"
+        },
+        {
+            "id": "odl-wim",
+            "name": "odl-wim",
+            "description": "Athens Platform WIM",
+            "url": "10.30.0.168",
+            "type": "odl-wim",
+            "monitoring-url": "10.30.0.168:8888"
+        }
+    ],
+    "function": [
+        {
+            "id": "Amari_eNB_Minilab",
+            "name": "Amarisoft eNB Minilab",
+            "gen": 4,
+            "func": 1,
+            "shared": {
+                "availability": false
+            },
+            "type": 1,
+            "location": "Minilab",
+            "pnf_list": [
+                {
+                    "pnf-id": "amarisoft_eNB",
+                    "description": "Amarisoft physical eNodeB in Minilab location",
+                    "location": "Minilab",
+                    "ip": "10.2.1.11",
+                    "optional": false
+                }
+            ],
+            "ems-id": "amarisoft-ems"
+        },
+        {
+            "id": "Amari_vEPC",
+            "name": "Amarisoft vEPC NCSRD Core",
+            "gen": 4,
+            "func": 0,
+            "shared": {
+                "availability": false
+            },
+            "type": 0,
+            "location": "Core",
+            "ns_list": [
+                {
+                    "nsd-id": "a9ac7f6e-9b44-4f99-860b-db4c94794b4d",
+                    "ns-name": "Amari_EPC",
+                    "placement": 0,
+                    "optional": false
+                }
+            ],
+            "ems-id": "amarisoft-ems"
+        },
+        {
+            "id": "O5GCore_Core",
+            "name": "O5GCore_Core",
+            "gen": 5,
+            "func": 0,
+            "shared": {
+                "availability": true
+            },
+            "type": 0,
+            "location": "Core",
+            "ns_list": [
+                {
+                    "nsd-id": "f27602a7-173d-4ead-ac7e-79bfbdfdaf44",
+                    "ns-name": "5GCore_GW_nsd",
+                    "placement": 0,
+                    "optional": false
+                },
+                {
+                    "nsd-id": "91e16ae4-d9f9-4787-aebf-e058dcf9d05f",
+                    "ns-name": "5GCore_MME-HSS_nsd",
+                    "placement": 0,
+                    "optional": false
+                },
+                {
+                    "nsd-id": "551b27ec-4903-4877-ac46-96e91a1e0d7a",
+                    "ns-name": "5GCore_PCRF_nsd",
+                    "placement": 0,
+                    "optional": true
+                },
+                {
+                    "nsd-id": "65373e5a-679d-46b7-898a-e304652e5102",
+                    "ns-name": "dummy_ns",
+                    "placement": 0,
+                    "optional": true
+                }
+            ],
+            "ems-id": "test-ems"
+        },
+        {
+            "id": "O5GRadio_Minilab",
+            "name": "O5GRadio_Minilab",
+            "gen": 5,
+            "func": 1,
+            "shared": {
+                "availability": false
+            },
+            "type": 1,
+            "location": "Minilab",
+            "pnf_list": [
+                {
+                    "pnf-id": "O5G_gNodeB",
+                    "description": "The O5G PNF gNodeB in Minilab location",
+                    "location": "Minilab",
+                    "ip": "10.30.30.30",
+                    "optional": false
+                }
+            ],
+            "ems-id": "test-ems"
+        }
+    ]
+}

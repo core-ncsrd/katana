@@ -1,0 +1,61 @@
+Metadata-Version: 2.1
+Name: sct
+Version: 0.1.0
+Summary: Automation script for Service Creation Time measurements
+Home-page: https://github.com/medianetlab/5genesis_experimentation/tree/master/slice_creation_time
+Author: Themis Anagnostopoulos
+Author-email: them.anagno@gmail.com
+License: MIT
+Description: 
+        # Service Creation Time
+        
+        Script that creates slice based on the provided NEST, gets the Service Creation Time measurements and
+        exports that to an InfluxDB and to a CSV file
+        
+        ## Installation
+        
+        ```bash
+        pip3 install .
+        ```
+        
+        ## Usage
+        
+        ```bash
+        sct --url URL --nest NEST --iterations I --database DB_URL --csv CSV
+        ```
+        
+        ### Options
+        
+        #### --url | -u (Required)
+        
+        The url of Katana Slice Manaer that will be used. It must be in the form: `host_ip:port`
+        
+        #### --nest | -n (Required)
+        
+        The NEST JSON file that will be used for the created slice
+        
+        #### --iterations | -i (Optional)
+        
+        The number of the iterations. By default it is 25
+        
+        #### --database | -d (Optional)
+        
+        The URL of the Influx DB where the results will be exported. It must be in the form: `username:password@host:port/db`
+        
+        > If no db url is provided, the results will be exported by default on a CSV file
+        
+        #### --csv | -c (Optional)
+        
+        The CSV file where the results will be exported
+        
+        > If neither csv file nor database URL is provided, the results will be exported by default at ./output.csv
+        
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.6.0
+Description-Content-Type: text/markdown

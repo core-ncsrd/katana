@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+
+  "type": "object",
+  "description": "A new Policy Management System",
+  "properties": {
+    "id":{
+      "type": "string",
+      "description": "Unique id"
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL of the Policy Management System"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description for the Policy Management System"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type for new Policy Management System"
+    }
+  },
+  "required": ["id", "url", "type"]
+}

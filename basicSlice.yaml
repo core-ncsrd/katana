@@ -1,0 +1,29 @@
+base_slice_descriptor:
+  base_slice_des_id: "minimal_slice"
+  coverage:
+    - "default_location"
+  delay_tolerance: true
+  network_DL_throughput:
+    guaranteed: 100
+    maximum: 500
+  network_UL_throughput:
+    guaranteed: 100
+    maximum: 500
+  ue_DL_throughput:
+    guaranteed: 50
+    maximum: 100
+  ue_UL_throughput:
+    guaranteed: 50
+    maximum: 100
+  isolation_level:
+    isolation: 0
+  number_of_connections: 5
+  number_of_terminals: 5
+
+service_descriptor:
+  ns_list:
+    - nfvo-id: "osm1"                # NFVO ID for the core network function (as seen from `katana nfvo ls`)
+      nsd-id: "demo_nsd"     # Replace with the actual NSD ID you plan to use
+      ns-name: "core_network_service"
+      placement: 1                   # Placement in the core network
+      vim-id: "vim_core"             # VIM ID for the network function (as seen from `katana vim ls`)

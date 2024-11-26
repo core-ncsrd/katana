@@ -1,0 +1,32 @@
+global:
+  evaluation_interval: 10s
+  scrape_interval: 10s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - katana-alertmanager:9093
+
+# Load alerts
+rule_files:
+  - /etc/prometheus/rules/alerts.yml
+
+# Define the targets
+scrape_configs:
+- job_name: SB_Components
+  scheme: http
+  static_configs:
+  - targets: []
+  file_sd_configs:
+    - files: 
+      - /etc/prometheus/targets/wim_targets.json
+      - /etc/prometheus/targets/vim_targets.json
+      refresh_interval: 30s
+- job_name: katana
+  scheme: http
+  static_configs:
+  - targets:
+    - localhost:9090
+    - katana-nfv_mon:8002
