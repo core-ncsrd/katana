@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "credentials": "creds.yaml",
+  "schema_type": "k8scluster",
+  "name": "cluster13",
+  "description": "Isolated K8s cluster in mylocation",
+  "vim_account": "e15e852f-7372-4c5d-bcd4-ae95fb391763",
+  "nfvo_ip": "nbi.10.160.101.218.nip.io",
+  "nfvo_username": "admin",
+  "nfvo_password": "admin",
+  "k8s_version": "v1.30.7",
+  "nets": {
+      "k8s_net1": null
+  },
+  "namespace": "default",
+  "deployment_methods": {
+      "juju-bundle": true,
+      "helm-chart-v3": true
+  }
+}

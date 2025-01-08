@@ -1,39 +1,38 @@
-""" Katana North-Bound Interface - Implemented with Flask"""
-
-# -*- coding: utf-8 -*-
-from flask import Flask
+import logging
+from flask import Flask, jsonify
 from flask_cors import CORS
-
-from katana.api.ems import EmsView
-from katana.api.function import FunctionView
-from katana.api.gst import GstView
-from katana.api.nfvo import NFVOView
-from katana.api.nslist import NslistView
-from katana.api.policy import PolicyView
-from katana.api.resource import ResourcesView
-from katana.api.slice import SliceView
-from katana.api.slice_des import Base_slice_desView
-from katana.api.vim import VimView
-from katana.api.wim import WimView
-from katana.api.bootstrap import BootstrapView
-from katana.api.locations import LocationView
-from katana.api.alerts import AlertView
-
+from katana.api import (
+    EmsView,
+    FunctionView,
+    GstView,
+    NFVOView,
+    NslistView,
+    PolicyView,
+    ResourcesView,
+    SliceView,
+    Base_slice_desView,
+    VimView,
+    WimView,
+    BootstrapView,
+    LocationView,
+    AlertView,
+    K8SClusterView,
+)
 
 def create_app():
     """
     Create a Flask application using the app factory pattern.
-
-    :return: Flask app
     """
     app = Flask(__name__, instance_relative_config=True)
 
-    # Enable CORS for the app
-    CORS(app)
-
+    # Load configuration
     app.config.from_object("config.settings")
     app.config.from_pyfile("settings.py", silent=True)
 
+    # Enable CORS with restrictions
+    CORS(app, resources={r"/api/*": {"origins": "*"}})  # Adjust origins for production
+
+    # Register views
     VimView.register(app, trailing_slash=False)
     WimView.register(app, trailing_slash=False)
     EmsView.register(app, trailing_slash=False)
@@ -48,5 +47,25 @@ def create_app():
     BootstrapView.register(app, trailing_slash=False)
     LocationView.register(app, trailing_slash=False)
     AlertView.register(app, trailing_slash=False)
+    K8SClusterView.register(app, trailing_slash=False)
 
+    # Setup logging
+    logger = logging.getLogger("katana")
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.info(f"Registered routes: {app.url_map}")
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({"error": "Resource not found"}), 404
+
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({"error": "Internal server error"}), 500
+
+    logger.info("Katana application started successfully.")
     return app

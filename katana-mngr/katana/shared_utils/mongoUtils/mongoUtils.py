@@ -6,6 +6,7 @@ db = client.katana
 
 # Initialize all collections and create indexes
 db.vim.create_index([("id", ASCENDING)], unique=True)
+db.k8sclusters.create_index([("id", ASCENDING)], unique=True)
 db.nfvo.create_index([("id", ASCENDING)], unique=True)
 db.wim.create_index([("id", ASCENDING)], unique=True)
 db.ems.create_index([("id", ASCENDING)], unique=True)

@@ -141,6 +141,13 @@ class VimView(FlaskView):
                 request.json["resources"] = {"N/A": "N/A"}
                 thebytes = pickle.dumps(new_vim)
                 obj_json = {"_id": new_uuid, "id": request.json["id"], "obj": Binary(thebytes)}
+        # Type of Dummy
+        elif request.json["type"] == "dummy":
+            
+                request.json["resources"] = {"dummy": "dummy"}
+                thebytes = pickle.dumps(None)
+                obj_json = {"_id": new_uuid, "id": request.json["id"], "obj": Binary(thebytes)}           
+        
         else:
             response = dumps({"error": "This type VIM is not supported"})
             return response, 400
@@ -152,6 +159,8 @@ class VimView(FlaskView):
         if location:
             mongoUtils.update("location", location["_id"], location)
         return new_uuid, 201
+    
+        
 
     def delete(self, uuid):
         """

@@ -22,7 +22,7 @@ class CLI(click.MultiCommand):
                 commands.append(filename[4:-3])
 
         commands.sort()
-
+        print(commands)
         return commands
 
     def get_command(self, ctx, name):
