@@ -1,0 +1,7 @@
+# Example YAML file for registering a Proxmox cluster
+name: "Antares"     # A name for the cluster (for reference)
+url: "https://10.160.100.11:8006"  # URL to the Proxmox API endpoint
+username: "root@pam"            # Username with API access (typically root@pam)
+password: "d1g1c0m?"  # Password for the API user
+node: "cls01srv04" 
+                     # Node name in the Proxmox cluster

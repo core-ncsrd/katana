@@ -1,0 +1,7 @@
+{
+  "pod_prefix": "open5gs-2-2-8-tgz-0026435497-mec-service",
+  "target_node": "worker1",
+  "namespace": "89f2ad36-f21e-458d-a341-5a8d92cff077",
+  "deployment": "open5gs-2-2-8-tgz-0026435497-mec-service",
+  "config": "creds/creds.yaml"
+}

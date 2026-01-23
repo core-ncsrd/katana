@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Logs</title>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 20px;
+    }
+    .log-card {
+      margin-bottom: 15px;
+    }
+    .log-card-header {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+    .log-card-body {
+      background-color: #fff;
+    }
+  </style>
+  <script>
+    // Function to fetch logs from the backend endpoint
+    function fetchLogs() {
+      fetch('/logs/get_logs')
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById('logs-container');
+          container.innerHTML = ''; // Clear existing logs
+          data.forEach((log, index) => {
+            // Create a card for each log entry
+            const card = document.createElement('div');
+            card.className = 'card log-card';
+            
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'card-header log-card-header';
+            cardHeader.textContent = `Log Entry ${index + 1}`;
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body log-card-body';
+            cardBody.innerHTML = `
+              <p><strong>TX ID:</strong> ${log.tx_id}</p>
+              <p><strong>Metrics Hash:</strong> ${log.metrics_hash}</p>
+              <p><strong>Mongo ID:</strong> ${log.mongo_id}</p>
+              <p><strong>Timestamp:</strong> ${log.timestamp}</p>
+              
+            `;
+            
+            card.appendChild(cardHeader);
+            card.appendChild(cardBody);
+            container.appendChild(card);
+          });
+          console.log("Logs refreshed at", new Date().toLocaleTimeString());
+        })
+        .catch(err => console.error('Error fetching logs:', err));
+    }
+
+    // On page load, fetch logs and set up an interval to refresh every 5 seconds
+    window.onload = function() {
+      fetchLogs();
+      setInterval(fetchLogs, 5000);
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1 class="my-4 text-center">Logs</h1>
+    <div id="logs-container">
+      <!-- Log entries will appear here -->
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+Flask
+Flask-Cors
+Flask-Classful
+gunicorn
+Werkzeug

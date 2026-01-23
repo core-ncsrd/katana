@@ -1,0 +1,56 @@
+# proxmox_vms.yaml
+# This YAML file contains configurations for Proxmox VMs
+
+# Specify which Proxmox cluster to use (either by ID or name)
+cluster_name: "main-proxmox-cluster"  # Name of the registered Proxmox cluster
+# cluster_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Or use the cluster ID instead
+
+# List of VMs to create
+vms:
+  # First VM configuration
+  - name: "katana-vm-1"      # Name of the VM
+    template: "101"          # ID of the template to clone (replace with your template ID)
+    cpu: 4                   # Number of CPU cores
+    ram: 4096                # RAM in MB
+    storage_type: "fast:vm"  # Storage type: Format is "storage_name:format" or just "storage_name"
+    disk_size: 20            # Disk size in GB
+    
+    # List of virtual bridges to attach to the VM
+    bridges:
+      # Management bridge (will use DHCP by default)
+      - name: "vmbr0"        # Name of the virtual bridge
+        type: "management"   # Bridge type: "management" or "custom"
+      
+      # Custom bridge with static IP configuration
+      - name: "vmbr1"
+        type: "custom"
+        ip: "192.168.10.10"  # Static IP address for this interface
+        netmask: "255.255.255.0"  # Network mask
+        gateway: "192.168.10.1"   # Gateway IP address
+  
+  # Second VM configuration
+  - name: "katana-vm-2"
+    template: "101"
+    cpu: 2
+    ram: 2048
+    storage_type: "datastorage"
+    disk_size: 30
+    
+    bridges:
+      # Management bridge
+      - name: "vmbr0"
+        type: "management"
+      
+      # First custom bridge
+      - name: "vmbr1"
+        type: "custom"
+        ip: "192.168.10.11"
+        netmask: "255.255.255.0"
+        gateway: "192.168.10.1"
+      
+      # Second custom bridge
+      - name: "vmbr2"
+        type: "custom"
+        ip: "10.0.0.11"
+        netmask: "255.255.255.0"
+        gateway: "10.0.0.1"
