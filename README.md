@@ -1,72 +1,60 @@
-# Katana Slice Manager Upadted
 
 ![Katana Logo](./templates/images/katana-logo.svg)
 
-----------
 
-[![Stargazers](https://img.shields.io/github/stars/medianetlab/katana-slice_manager?style=for-the-badge)](https://github.com/medianetlab/katana-slice_manager/stargazers)
-[![Forks](https://img.shields.io/github/forks/medianetlab/katana-slice_manager?style=for-the-badge)](https://github.com/medianetlab/katana-slice_manager/network/members)
-[![Commit Activity](https://img.shields.io/github/commit-activity/m/medianetlab/katana-slice_manager?style=for-the-badge)](https://github.com/medianetlab/katana-slice_manager/graphs/commit-activity)
+## Contributing
 
-[![Watchers](https://img.shields.io/github/watchers/medianetlab/katana-slice_manager?style=for-the-badge)](https://github.com/medianetlab/katana-slice_manager/watchers)
-[![Contributors](https://img.shields.io/github/contributors/medianetlab/katana-slice_manager?style=for-the-badge)](https://github.com/medianetlab/katana-slice_manager/graphs/contributors)
-[![Issues](https://img.shields.io/github/issues/medianetlab/katana-slice_manager?style=for-the-badge)](https://github.com/medianetlab/katana-slice_manager/issues)
+Code Contributions
 
-[![Build Status](https://jenkins.medianetlab.gr/buildStatus/icon?job=katana%2Fmnl.testing)](https://jenkins.medianetlab.gr/job/katana/job/mnl.testing/)
+Original Contributors
+- themisAnagno (Themis Anagostopoulos)
+- tgogos (Anastasios Gogos)
+- xilouris (George Xilouris)
+- santojim (Jim Santorineos)
 
-----------
+  <br>**Current Maintainer/Developer**
 
-## :page_with_curl: Introduction to Network Slicing
+- TheReaperGR (Leonis Panagiotis)
 
-Network slicing is a 5G cutting edge technology that enables the creation of multiple virtual networks on top of shared physical infrastructure, allowing operators to provide portions of their networks that fit the requirements defined by various vertical industries. A network slice can be described as the collection of multiple sub-slices of different domains, such as the Core Datacenter, the Transport network, and one or numerous Edge Locations. The figure below depicts some examples of 5G Network Slices:
 
-![Network Slices Examples](templates/images/SlicingOptions.png)
+
+
+
+# KATANA Slice Manager
 
 Katana Slice Manager is a centralized software component that provides an interface for creating, modifying, monitoring, and deleting slices. Through the North Bound Interface (NBI), the Slice Manager receives the Network Slice Template (NEST) for creating network slices and provides the API for managing and monitoring them. Through the South Bound Interface (SBI), it communicates with the Network Sub-Slice Manager components of the Management Layer, namely the Virtual Infrastructure Manager (VIM), the NFV Orchestrator (NFVO), the Element Management System (EMS), and the WAN Infrastructure Management (WIM).
 
 Katana Slice Manager is based on a highly modular architecture, built as a mesh of microservices, each of which is running on a docker container. The key advantages of this architectural approach are that it offers simplicity in building and maintaining applications, flexibility and scalability, while the containerized approach makes the applications independent of the underlying system.
 
-## :clipboard: Features
+
+
+
+## Features
 
 - Start, Stop, Inspect End-to-End Network Slices
-- OpenAPIs supported by Swagger-io tool
+- OpenAPIs
 - Modular architecture for supporting different infrastructure technologies
 - Integrated CLI tool
-- Slice Day-2 operations
-- Prometheus and Grafana Monitoring modules
+- Slice Day-2 operations **[Enhanced]**
+- Prometheus and Grafana Monitoring modules **[Enhanced]**
 - Integrated Policy Engine System
 - Slice Deployment and Configuration measurements
-- CI/CD procedures
+- K8s/K3s support **[NEW]**
+- **PQC (Post-Quantum Cryptography) with Besu Blockchain** **[NEW]**
+- **Proxmox VM Management Integration** **[NEW]**
+- **5G Stack Deployment (Open5GS/UERANSIM)** **[NEW]**
 
-## :hammer_and_pick: Quick Start
 
-### Requirements
+## Installation
 
-- docker version >= 18.09.6
-- docker-compose version >= 1.17.1
 
-### Build
+To Install KATANA you must download the repo extract it then run 
+go inside the project and run:
 
-Build the Katana Docker images and install the katana CLI command on the local system.
-
-``` bash
-bash bin/build.sh [-r | --release <RELEASE_NUMBER>] [--docker_reg <REMOTE_DOCKER_REGISTRY>] [--docker_repo <DOCKER_REPOSITORY>] [--docker_reg_user <REGISTRY_USER>] [--docker_reg_passwd <REGISTRY_PASSWORD>] [--push] [--dev] [-h | --help]
+```bash
+  sudo ./bin/build.sh
 ```
-
-Options:
-
-- __[-r | --release <RELEASE_NUMBER>] :__ Define the release that will match the Docker Tag of Katana Docker images (Default: :test).
-- __[--docker_reg <REMOTE_DOCKER_REGISTRY>] :__ Define the remote Docker registry. If no docker registry is specified, Katana will try to use the public Docker hub
-- __[--docker_repo <DOCKER_REPOSITORY>] :__ Define the Docker repository
-- __[--docker_reg_user <REGISTRY_USER>] :__ Define the user of the remote Docker registry
-- __[--docker_reg_passwd <REGISTRY_PASSWORD>] :__ Define the password for the user of the remote Docker registry
-- __[--push] :__ Push the images to the remote Docker registry
-- __[--dev] :__ Create a dev workspace for development purposes
-- __[-h | --help] :__ Print this message and quit
-
-> Sudo privileges will be needed for installing the CLI command tool
-
-### Deploy
+## Deployment
 
 Deploy katana Slice Manager service. The script will attempt to pull the defined Docker tag from the defined Docker registry/repository. Otherwise, it will build the images using the ":test" tag.
 
@@ -86,106 +74,374 @@ Options:
 - __[--no_build] :__ Try to download Docker images, but do not build them
 - __[--apex] :__ Initiate the APEX Policy Engine
 - __[-h | --help] :__ Print help message and quit
+## Logs
 
-### Logs
-
-Get the logs of katana-mngr and katana-nbi modules:
-
+In order to get the logs of the katana-mngr and katana-nbi modules run:
 ```bash
 katana logs [-l | --limit N]
 ```
 
-- __-l | --limit__: Show a limited number of lines from the end of the logs (default "all")
-
-### Stop
-
+## Stop
 Stop Katana Slice Manager:
 
-```bash
-bash bin/stop.sh [-c | --clear] [-h | --help]
+```bash 
+bin/stop.sh [-c | --clear] [-h | --help]
 ```
 
-- __[-c | --clear] :__ Remove the container volumes
-- __[-h | --help] :__ Print help message and quit
+- **[-c | --clear]** : Remove the container volumes
+- **[-h | --help]** : Print help message and quit
 
-### Uninstall
-
-Remove katana Docker resources and the CLI command tool
-
-```bash
-bash bin/uninstall.sh
-```
-
-> Sudo privileges will be needed for removing the CLI command tool
-
-### Monitoring
-
-To start Prometheus and Grafana Monitoring modules add the `-m | --monitoring` flag to `deploy.sh` binary. Prometheus is running at port __9090__ and Grafana at port __3000__. A new dashboard will be created on Grafana for every new slice that is created.
-
-By default Grafana credentials are admin:admin. To change it, create the `katana-grafana/.env` file with the following environmental variables:
+## Uninstall
+To Uninstall Katana Slice Manager run the following:
 
 ```bash
-GF_SECURITY_ADMIN_USER=USER
-GF_SECURITY_ADMIN_PASSWORD=PASSWORD
+.bin/uninstall.sh
+```
+## Usage/Examples
+
+**We assume that an OSM 16 and a K8s/MicroK8s cluster or Openstack have been installed and configured properly and that the user has already uploaded an nsd/vnfd to osm**
+
+### Registering NVFO to Katana
+```bash
+sudo katana nfvo add -f osm.json
+```
+with this command we register our osm the format of the json is the following
+
+```json
+{
+  "id": "<Give id>",
+  "name": "<Give a name>",
+  "nfvoip": "nbi.<ip of OSM>.nip.io",
+  "nfvousername": "admin",
+  "nfvopassword": "admin",
+  "tenantname": "admin",
+  "type": "OSM",
+  "version": "",
+  "description": "string",
+  "config": [
+    {
+      "id": "0",
+      "nfvousername": "admin",
+      "nfvopassword": "admin",
+      "nfvoip": "nbi.<ip of OSM>.nip.io",
+      "tenantname": "admin"
+    }
+  ]
+}
+```
+### Registering location to Katana
+```bash
+sudo katana location add -f location.json
+```
+with this command we register the location of a vim the format of the json is the following
+
+```json
+{
+
+"id": "group0_edge",
+
+"description": "Group 0 Edge location"
+
+}
+```
+### Registering a VIM to Katana
+```bash
+sudo katana vim add -f vim.json
 ```
 
-## :keyboard: Development Environment
+Running this will register a vim to katana json format is below
 
-To create a development environment for katana on a Linux host, run:
+```json
+{
+  "id": "vim_core2",
+  "name": "vim_Core2",
+  "auth_url": "http://<IP of the openstack>:5000/v3/",
+  "username": "admin",
+  "password": "<password given by openstack>",
+  "admin_project_name": "admin",
+  "location": "<Should be the same as the location id>",
+  "type": "openstack",
+  "version": "2024.1/stable",
+  "description": "Group 0 VIM",
+  "infrastructure_monitoring": "http://<IP of the openstack>:9093/metrics",
+  "config": {
+    "security_groups": "TBA"
+  }
+}
+```
+
+### Adding network function to Katana
+```bash
+sudo katana function add -f function.json
+```
+the network function json should look like this
+
+```json
+{
+  "id": "group0_demo5GCore",
+  "name": "group0_demo5GCore",
+  "gen": 5,
+  "func": 0,
+  "shared": {
+    "availability": false
+  },
+  "type": 0,
+  "location": "<Location ID of where this should be registered to>",
+  "pnf_list": [],
+  "ns_list": [
+    {
+      "nsd-id": "<id of the NSD file that has been uploaded to OSM>",
+      "ns-name": "<Name of the NSD file that has been uploaded to OSM>",
+      "placement": 0,
+      "optional": false
+    }
+  ]
+}
+```
+
+### Adding a slice to Katana
+```bash
+sudo katana slice add -f slice.json
+```
+
+the json for the slice should be like this
+```json
+{
+  "base_slice_descriptor": {
+    "base_slice_des_id": "group0_demo_slice",
+    "coverage": [
+      "group0_edge"
+    ],
+    "delay_tolerance": true,
+    "network_DL_throughput": {
+      "guaranteed": 1500000
+    },
+    "ue_DL_throughput": {
+      "guaranteed": 1500000
+    },
+    "network_UL_throughput": {
+      "guaranteed": 50000
+    },
+    "ue_UL_throughput": {
+      "guaranteed": 60000
+    },
+    "mtu": 1500
+  },
+  "service_descriptor": {
+    "ns_list": [
+      {
+        "nsd-id": "<ID of the NSD that has been uploaded to OSM>",
+        "ns-name": "Name of the NSD that has been uploaded to OSM",
+        "placement": 0,
+        "optional": false
+      }
+    ]
+  }
+}
+```
+## K8s/MicroK8s Configuration
+**We assume that a there is already a helm chart uploaded somewhere for osm to deploy and the user has uploaded the appropriate nsd/knf to OSM**
+
+### Registering NVFO
+```bash
+sudo katana nfvo add -f osm.json
+```
+with this command we register our osm. The format of the json is the following
+
+```json
+{
+  "id": "<Give id>",
+  "name": "<Give a name>",
+  "nfvoip": "nbi.<ip of OSM>.nip.io",
+  "nfvousername": "admin",
+  "nfvopassword": "admin",
+  "tenantname": "admin",
+  "type": "OSM",
+  "version": "",
+  "description": "string",
+  "config": [
+    {
+      "id": "0",
+      "nfvousername": "admin",
+      "nfvopassword": "admin",
+      "nfvoip": "nbi.<ip of OSM>.nip.io",
+      "tenantname": "admin"
+    }
+  ]
+}
+```
+### Uploading Cluster Credentials
+**The user needs to get the kubernets config from the cluster which contains the ip and the hash for the whole cluster in order to be parsed to katana**
+```bash
+sudo katana k8s uploadcreds -f creds.yaml
+```
+### Registering Cluster to Katana
 
 ```bash
-bash bin/build.sh --dev
+sudo katana k8s add -f k8s.json
+```
+The json for registering kubernetes has the following
+
+```json
+{
+  "schema_version": "1.0",
+  "credentials": "creds.yaml",
+  "schema_type": "k8scluster",
+  "name": "Microk8sCluster3",
+  "description": "Isolated K8s cluster in mylocation",
+  "vim_account": "<Vim id of a dummy vim registerd by the OSM>",
+  "nfvo_ip": "nbi.<OSM IP>.nip.io",
+  "nfvo_username": "admin",
+  "nfvo_password": "admin",
+  "k8s_version": "v1.30.7",
+  "nets": {
+    "k8s_net1": null
+  },
+  "namespace": "default",
+  "deployment_methods": {
+    "juju-bundle": true,
+    "helm-chart-v3": true
+  }
+}
 ```
 
-This will create hard links of the __shared_utils__ directory of both katana-mngr and katana-nbi on the root directory `./dev_shared_utils`. So any changes done on the existing files ./shared_utils directory will be reflected to __katana-mngr/katana/shared_utils__ and __katana-nbi/katana/shared_utils__ directories. To add new files that are created in the dev_shared_utils directory, run the command:
-
+### Deploying a Service to the Cluster
 ```bash
-for dest in katana-{mngr,nbi}/katana/shared_utils/; do cp -al dev_shared_utils/{PATH_TO_NEW_FILE} $dest; done
+sudo katana k8s deploy -f service.json
+```
+```json
+{
+
+"nfvo_id": "<ID that katana give back after registerning the OSM>",
+
+"nsdId": "<id of the NSD>",
+
+"nsName": "<name of the NSD>",
+
+"nsDescription": "default description",
+
+"vimAccountId": "<VIM id of the new vim that will be created after registering the k8s cluster>"
+
+}
+```
+### Migrating a pod
+```bash
+sudo katana k8s migration -f migration.json
+```
+```json
+{
+  "pod_prefix": "open5gs-2-2-8-tgz-0094188170-mec-service",
+  "target_node": "<name of the worker that we want to migrate the pod to>",
+  "namespace": "<Namespace of the pods we want to migrate>",
+  "deployment": "<Extact Name of the pod>",
+  "config": "creds/<Extact name of the credential file we uploaded for the cluster we registerd>"
+}
 ```
 
-It will also create a __dev__ folder, where the example_config_files will be copied for providing direct access to testing configuration files.
+---
 
-You can also check the [Wiki "For Developers"](https://github.com/medianetlab/katana-slice_manager/wiki/developers) page for more details.
+## PQC (Post-Quantum Cryptography) Deployment
 
-## :heavy_check_mark: CI/CD
+Katana supports deploying slices with Post-Quantum Cryptography enabled via Hyperledger Besu blockchain. The `--pqc` flag triggers an Ansible controller to deploy Besu nodes before slice creation.
 
-The current implementation supports two pipelines, using the respective Jenkinsfile:
+### Prerequisites for PQC
+- Ansible Controller server running at port 5000
+- Besu ansible playbooks configured at `/home/localadmin/besu-ansible`
+- Network connectivity to the Ansible controller
 
-### Development/Integration Pipeline
+### Creating a Slice with PQC
+```bash
+# Standard slice creation
+sudo katana slice add -f slice.yaml
 
-- CI Pipeline using the file [jenkins/ci/Jenkinsfile](jenkins/ci/Jenkinsfile):
-  - Builds the Katana Docker images and deploys a testing instance of Katana SM
-  - Runs the defined Functional and Integration tests. Tests are defined in the folder [jenkins/ci/tests](jenkins/ci/tests)
-  - If the changes are occurring on the master branch, the built images will be packaged and uploaded to the defined Docker registry
-  - Required parameters/variables on Jenkins:
-    - katana_reg: The remote Docker registry that will be used for pushing Docker Images
-    - katana_repo: The remote Docker repository that will be used for pushing Docker Images
-    - test_server: The label of the Jenkins agent that will be used for running the testing Katana instance
-  - Required credentials on Jenkins:
-    - katana-reg-creds: Username/Password for the remote Docker registry
+# With PQC/Besu blockchain deployment
+sudo katana slice add --pqc -f slice.yaml
+# You will be prompted: "Enter the Ansible controller IP address [10.160.101.122]:"
+```
 
-> This Pipeline is executed on a testing environment
+When using `--pqc`:
+1. CLI prompts for Ansible controller IP (default: 10.160.101.122)
+2. Sends request to `http://<ANSIBLE_IP>:5000/run_playbook`
+3. Ansible executes `start_nodes.yml` to deploy Besu blockchain
+4. On success, proceeds with slice creation
 
-### Deployment Pipeline
+---
 
-- CD Pipeline using the file [jenkins/cd/Jenkinsfile](jenkins/cd/Jenkinsfile):
-  - Builds the docker images using the latest tag
-  - Deploys the latest version of Katana SM on the defined Operational environment
-  - Sends notification on Slack
-    - Required parameters/variables on Jenkins:
-    - katana_reg: The remote Docker registry that will be used for pushing Docker Images
-    - katana_repo: The remote Docker repository that will be used for pushing Docker Images
-    - prod_server: The label of the Jenkins agent that will be used for running the stable Katana instance
-    - prod_server_ip: The IP Address of the production server that will be used for hosting the stable Katana instance
-  - Required credentials on Jenkins:
-    - katana-reg-creds: Username/Password for the remote Docker registry
+## Proxmox VM Management
 
-> This Pipeline is executed on a stable production/staging environment
+Katana can create and manage VMs on Proxmox clusters using the `--prox` flag or dedicated Proxmox CLI commands.
 
-## :book: Documentation
+### Registering a Proxmox Cluster
+```bash
+sudo katana proxmox add -f proxmox_cluster.yaml
+```
 
-- [Wiki](https://github.com/medianetlab/katana-slice_manager/wiki)
-- [5GENESIS Deliverable](https://5genesis.eu/wp-content/uploads/2019/10/5GENESIS_D3.3_v1.0.pdf)
-# katana-updated
-# KatanaSliceManagerUpdated
-# KatanaSliceManagerUpdated
+Example `proxmox_cluster.yaml`:
+```yaml
+name: "MyCluster"
+url: "https://10.160.100.11:8006"
+username: "root@pam"
+password: "your_password"
+node: "proxmox-node-01"
+```
+
+### Creating VMs from YAML
+```bash
+# Create VMs only
+sudo katana slice add --prox proxmox_vms.yaml
+
+# Create VMs then create slice
+sudo katana slice add --prox proxmox_vms.yaml -f slice.yaml
+
+# Full deployment: Besu + VMs + Slice
+sudo katana slice add --pqc --prox proxmox_vms.yaml -f slice.yaml
+```
+
+Example `proxmox_vms.yaml`:
+```yaml
+cluster_name: "MyCluster"
+vms:
+  - name: "katana-vm-1"
+    template: "101"
+    cpu: 4
+    ram: 4096
+    storage_type: "local-lvm"
+    disk_size: 20
+    bridges:
+      - name: "vmbr0"
+        type: "management"
+      - name: "vmbr1"
+        type: "custom"
+        ip: "192.168.10.10"
+        netmask: "255.255.255.0"
+        gateway: "192.168.10.1"
+```
+
+### Proxmox CLI Commands
+```bash
+# List registered clusters
+sudo katana proxmox ls
+
+# Remove a cluster
+sudo katana proxmox rm <CLUSTER_ID>
+
+# List all VMs
+sudo katana proxmox vms
+
+# Create VMs directly
+sudo katana proxmox vm-add -f proxmox_vms.yaml
+```
+
+---
+
+## Quick Reference
+
+| Deployment Type | Command |
+|-----------------|---------|
+| Standard slice | `katana slice add -f slice.yaml` |
+| PQC-enabled slice | `katana slice add --pqc -f slice.yaml` |
+| Proxmox VMs only | `katana slice add --prox vms.yaml` |
+| VMs + Slice | `katana slice add --prox vms.yaml -f slice.yaml` |
+
+
+For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
