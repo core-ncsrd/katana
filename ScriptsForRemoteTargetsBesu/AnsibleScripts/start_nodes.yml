@@ -1,0 +1,91 @@
+---
+- hosts: besu_nodes
+  become: yes
+  tasks:
+    - name: Check if DATABASE_METADATA.json exists
+      stat:
+        path: "{{ node_dir }}/data/DATABASE_METADATA.json"
+      register: db_meta
+
+    - name: Check if VERSION_METADATA.json exists
+      stat:
+        path: "{{ node_dir }}/data/VERSION_METADATA.json"
+      register: ver_meta
+
+    - name: Check if 'data/caches' directory exists
+      stat:
+        path: "{{ node_dir }}/data/caches"
+      register: caches_dir
+
+    - name: Check if 'data/database' directory exists
+      stat:
+        path: "{{ node_dir }}/data/database"
+      register: database_dir
+
+    - name: Determine if reset is needed
+      set_fact:
+        reset_needed: "{{ db_meta.stat.exists or ver_meta.stat.exists or caches_dir.stat.exists or database_dir.stat.exists }}"
+
+    - name: Run reset script if data exists
+      shell: ./reset.sh
+      args:
+        chdir: "{{ node_dir }}"
+      when: reset_needed
+
+    - name: Start Besu Node
+      shell: |
+        nohup {{ besu_command }} > besu.log 2>&1 &
+      args:
+        chdir: "{{ node_dir }}"
+
+    - name: Wait for JSON-RPC endpoint to be up on node1
+      uri:
+        url: "http://{{ ansible_host }}:8545"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: '{"jsonrpc": "2.0", "method": "net_version", "params": [], "id": 1}'
+        status_code: 200
+      register: rpc_response
+      retries: 10
+      delay: 10
+      until: rpc_response.json.result is defined
+      when: ansible_host == "<BESU NODE 1 IP>"
+
+    - name: Wait until node1 sees exactly one peer (total of two nodes)
+      uri:
+        url: "http://{{ ansible_host }}:8545"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: '{"jsonrpc": "2.0", "method": "net_peerCount", "params": [], "id": 1}'
+        status_code: 200
+      register: peer_response
+      retries: 10
+      delay: 10
+      until: (peer_response.json.result | int(base=16)) == 1
+      when: ansible_host == "<BESU NODE 1 IP>"
+
+    - name: Display final peer count from node1
+      debug:
+        msg: "Final peer count (from node1): {{ peer_response.json.result | int(base=16) }}"
+      when: ansible_host == "<BESU NODE 1 IP>"
+   
+    - name: Start metrics.py after blockchain is up
+      become: yes
+      become_user: localadmin
+      shell: nohup python3 /home/localadmin/metrics.py > metrics.log 2>&1 &
+      when: ansible_host == "<BESU NODE 2 IP>"
+
+
+    - name: Show the last few lines of metrics.log
+      become: yes
+      become_user: localadmin
+      shell: tail -n 10 /home/localadmin/metrics.log
+      register: metrics_log_output
+      when: ansible_host == "<BESU NODE 2 IP>"
+
+    - name: Display metrics.log output
+      debug:
+        msg: "{{ metrics_log_output.stdout }}"
+      when: (ansible_host == "<BESU NODE 2 IP>") and (metrics_running is defined) and (metrics_running.stdout != "")

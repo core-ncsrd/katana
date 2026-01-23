@@ -1,0 +1,4 @@
+[besu_nodes]
+node1 ansible_host=<BESU NODE 1 IP>ansible_user=localadmin node_dir=/home/localadmin/besu/Nodes/Node-1 besu_command='/opt/besu/bin/besu --data-path=data --genesis-file=../genesis.json --rpc-http-enabled --rpc-http-api=ETH,NET,WEB3,DEBUG,CLIQUE,ADMIN --host-allowlist="*" --rpc-http-cors-origins="all" --nat-method=NONE --p2p-host=192.168.200.1 --rpc-http-host=10.160.101.81'
+
+node2 ansible_host=<BESU NODE 2 IP> ansible_user=localadmin node_dir=/home/localadmin/besu/Node-2 besu_command='/opt/besu/bin/besu --data-path=data --genesis-file=../genesis.json --rpc-http-enabled --rpc-http-api=ETH,NET,IBFT --host-allowlist="*" --rpc-http-cors-origins="all" --nat-method=NONE --bootnodes=enode://26464c957a626a802bdcc1a7df7f67182cc81a2d785f11cd117dbb4766eab92d4c01e0425ce2b6498d004184afde16866c5a8c0d27870cc995726cdc802d4bfa@192.168.200.1:30303'

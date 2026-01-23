@@ -1,0 +1,48 @@
+---
+- hosts: besu_nodes
+  become: yes
+  tasks:
+    - name: Get Besu process IDs using the Besu main class
+      shell: pgrep -f 'org.hyperledger.besu.Besu'
+      register: besu_pids
+      failed_when: false
+
+    - name: Debug - Display found Besu PIDs
+      debug:
+        msg: "Found Besu processes: {{ besu_pids.stdout_lines }}"
+      when: besu_pids.stdout != ""
+
+    - name: Stop Besu processes with SIGTERM
+      shell: kill -15 {{ item }}
+      loop: "{{ besu_pids.stdout_lines }}"
+      when: besu_pids.stdout != ""
+      ignore_errors: yes
+
+    - name: Pause for graceful shutdown
+      pause:
+        seconds: 5
+
+    - name: Check if Besu processes are still running after SIGTERM
+      shell: pgrep -f 'org.hyperledger.besu.Besu'
+      register: remaining_besu
+      failed_when: false
+
+    - name: Force kill remaining Besu processes with SIGKILL
+      shell: kill -9 {{ item }}
+      loop: "{{ remaining_besu.stdout_lines }}"
+      when: remaining_besu.stdout != ""
+      ignore_errors: yes
+
+    - name: Final check for Besu processes
+      shell: pgrep -f 'org.hyperledger.besu.Besu'
+      register: final_check
+      failed_when: false
+
+    - name: Display final Besu process status
+      debug:
+        msg: >
+          {% if final_check.stdout == "" %}
+            No Besu processes running.
+          {% else %}
+            Besu processes still running: {{ final_check.stdout }}
+          {% endif %}
