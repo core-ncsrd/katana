@@ -17,6 +17,10 @@ from katana.api import (
     LocationView,
     AlertView,
     K8SClusterView,
+    LoTView,
+    InitSGCView,
+    getTrustLevelView,
+    PaoAlertView,
 )
 
 def create_app():
@@ -47,7 +51,11 @@ def create_app():
     BootstrapView.register(app, trailing_slash=False)
     LocationView.register(app, trailing_slash=False)
     AlertView.register(app, trailing_slash=False)
+    LoTView.register(app, trailing_slash=False)
     K8SClusterView.register(app, trailing_slash=False)
+    InitSGCView.register(app, trailing_slash=False)
+    getTrustLevelView.register(app, trailing_slash=False)
+    PaoAlertView.register(app, trailing_slash=False)
 
     # Setup logging
     logger = logging.getLogger("katana")

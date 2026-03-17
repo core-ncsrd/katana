@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   mongo:
-    image: "mongo:4.0.5"
+    image: "mongo:4.4"  # Upgraded from 4.0.5 to satisfy PyMongo Wire Version 8 requirement
     container_name: katana-mongo
     restart: always
     volumes:
@@ -37,8 +37,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_BROKER_ID: 1
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHa\
-        ndler=INFO,state.change.logger=INFO"
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CREATE_TOPICS: "slice:1:1"
     restart: always
@@ -54,8 +53,7 @@ services:
       context: .
       dockerfile: katana-nbi/Dockerfile
     container_name: katana-nbi
-    command: gunicorn -b 0.0.0.0:8000 --workers 3 --access-logfile - --reload
-      "katana.app:create_app()"
+    command: gunicorn -b 0.0.0.0:8000 --workers 3 --access-logfile - --reload "katana.app:create_app()"
     volumes:
       - "katana-prom-targets:/targets"
     ports:
@@ -63,17 +61,11 @@ services:
     environment:
       PYTHONWARNINGS: "ignore:Unverified HTTPS request"
       KATANA_MONITORING: ${KATANA_MONITORING}
-      restart: always
       APEX: ${APEX}
+    restart: always
     depends_on:
       - kafka
       - mongo
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.30.0.245:5140"
-    #     tag: "SliceManager"
-    #     syslog-format: "rfc5424"
 
   katana-mngr:
     image: "${DOCKER_REG}${DOCKER_REPO}katana-mngr:${DOCKER_TAG}"
@@ -94,12 +86,6 @@ services:
     depends_on:
       - katana-nbi
       - mongo
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.30.0.245:5140"
-    #     tag: "SliceManager"
-    #     syslog-format: "rfc5424"
 
   katana-cli:
     image: "${DOCKER_REG}${DOCKER_REPO}katana-cli:${DOCKER_TAG}"
@@ -107,8 +93,7 @@ services:
     build:
       context: .
       dockerfile: katana-cli/Dockerfile
-    command: >
-      /bin/bash
+    command: /bin/bash
     stdin_open: true
     tty: true
     network_mode: "host"
@@ -187,8 +172,7 @@ services:
     env_file:
       - "katana-grafana/.env"
       - "katana-nfv_mon/.env"
-    command: >
-      python katana/exporter.py
+    command: python katana/exporter.py
     ports:
       - "8002:8002"
     depends_on:

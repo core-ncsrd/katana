@@ -1,0 +1,5 @@
+# Ignore private scripts folder
+PrivateerScripts/
+ScriptsForRemoteTargetsBesu/
+katana-pqc-kpi/
+katana-pqc-return/

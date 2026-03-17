@@ -27,3 +27,6 @@ kafka-python
 
 # WSGI web application library
 werkzeug
+
+# SSH client (used by pao_alert and five_g_deployment)
+paramiko
