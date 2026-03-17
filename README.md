@@ -38,6 +38,70 @@ Katana Slice Manager is based on a highly modular architecture, built as a mesh 
 - Slice Deployment and Configuration measurements
 - CI/CD procedures
 
+## 📋PRIVATEER Branch Features 
+
+PRIVATEER vs Master — Feature Differences
+
+  The PRIVATEER branch is a significant evolution of the base Katana platform, adding three major new capability domains:
+
+  ---
+  1. Post-Quantum Cryptography (PQC) + Blockchain
+
+  - New katana-pqc-kpi module: real-time PQC performance monitoring dashboard (port 8080)
+  - New katana-pqc-return module: data aggregation and reporting
+  - Hyperledger Besu blockchain integration for immutable, auditable slice operation records
+  - katana slice add --pqc CLI flag to create quantum-safe slices
+
+  2. Proxmox VM Management
+
+  - Full Proxmox API integration (katana-nbi/katana/api/proxmox.py — 1,487 lines)
+  - New katana proxmox CLI commands for cluster/VM lifecycle management
+  - New API endpoints: /api/proxmox/cluster, /api/proxmox/cluster/{id}
+
+  3. 5G Stack Deployment (Open5GS / UERANSIM)
+
+  - Automated deployment of a full 5G Core (Open5GS) and 5G RAN Simulator (UERANSIM)
+  - SSH-based VM automation with Jinja2 templating for configuration
+  - Support for K8s/K3s-based deployment of 5G components
+
+  4. Kubernetes / K3s Support
+
+  - New katana k8s CLI commands for cluster registration and management
+  - New /api/k8s endpoint
+  - K8s-specific Grafana dashboards
+
+  5. Enhanced Monitoring
+
+  - PQC KPI dedicated HTML dashboard
+  - Besu blockchain metrics collection
+  - Predefined advanced slice dashboards in Grafana
+
+  6. Other Changes
+
+  - Python upgraded from 3.7.4 → 3.10.12
+  - 2 new CLI commands (k8s, proxmox) on top of the existing 13
+  - Comprehensive DEPLOYMENT_GUIDE.md (564 lines)
+
+  ---
+  At a Glance
+
+  ┌────────────────┬──────────────────┬──────────────────────────────┐
+  │                │      Master      │          PRIVATEER           │
+  ├────────────────┼──────────────────┼──────────────────────────────┤
+  │ Infrastructure │ OpenStack, OSM   │ + Proxmox, Kubernetes        │
+  ├────────────────┼──────────────────┼──────────────────────────────┤
+  │ Security       │ Standard TLS     │ + Post-Quantum Cryptography  │
+  ├────────────────┼──────────────────┼──────────────────────────────┤
+  │ Compliance     │ Basic monitoring │ Blockchain audit trail       │
+  ├────────────────┼──────────────────┼──────────────────────────────┤
+  │ 5G             │ Slice management │ + Full Core + RAN deployment │
+  ├────────────────┼──────────────────┼──────────────────────────────┤
+  │ Python         │ 3.7.4            │ 3.10.12                      │
+  └────────────────┴──────────────────┴──────────────────────────────┘
+
+  The PRIVATEER branch targets enterprise/research use cases requiring quantum-safe security, full 5G stack ownership, and virtualized infrastructure beyond OpenStack.
+
+
 ## :hammer_and_pick: Quick Start
 
 ### Requirements
