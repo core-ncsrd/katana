@@ -85,8 +85,8 @@ PRIVATEER vs Master — Feature Differences
   ---
   At a Glance
 
-| | Master | PRIVATEER |
-|---|---|---|
+| Feature | Master | PRIVATEER |
+|---------|--------|-----------|
 | **Infrastructure** | OpenStack, OSM | + Proxmox, Kubernetes |
 | **Security** | Standard TLS | + Post-Quantum Cryptography |
 | **Compliance** | Basic monitoring | Blockchain audit trail |
