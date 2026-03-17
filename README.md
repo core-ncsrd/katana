@@ -85,19 +85,13 @@ PRIVATEER vs Master — Feature Differences
   ---
   At a Glance
 
-  ┌────────────────┬──────────────────┬──────────────────────────────┐
-  │                │      Master      │          PRIVATEER           │
-  ├────────────────┼──────────────────┼──────────────────────────────┤
-  │ Infrastructure │ OpenStack, OSM   │ + Proxmox, Kubernetes        │
-  ├────────────────┼──────────────────┼──────────────────────────────┤
-  │ Security       │ Standard TLS     │ + Post-Quantum Cryptography  │
-  ├────────────────┼──────────────────┼──────────────────────────────┤
-  │ Compliance     │ Basic monitoring │ Blockchain audit trail       │
-  ├────────────────┼──────────────────┼──────────────────────────────┤
-  │ 5G             │ Slice management │ + Full Core + RAN deployment │
-  ├────────────────┼──────────────────┼──────────────────────────────┤
-  │ Python         │ 3.7.4            │ 3.10.12                      │
-  └────────────────┴──────────────────┴──────────────────────────────┘
+| | Master | PRIVATEER |
+|---|---|---|
+| **Infrastructure** | OpenStack, OSM | + Proxmox, Kubernetes |
+| **Security** | Standard TLS | + Post-Quantum Cryptography |
+| **Compliance** | Basic monitoring | Blockchain audit trail |
+| **5G** | Slice management | + Full Core + RAN deployment |
+| **Python** | 3.7.4 | 3.10.12 |
 
   The PRIVATEER branch targets enterprise/research use cases requiring quantum-safe security, full 5G stack ownership, and virtualized infrastructure beyond OpenStack.
 
