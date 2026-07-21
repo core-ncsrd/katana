@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 from pathlib import Path
 import tempfile
 import time
@@ -7,6 +8,7 @@ import unittest
 import uuid
 
 from tests.test_unified_infrastructure import (
+    ClickStub,
     MongoStub,
     PymongoStub,
     load_definitions,
@@ -82,6 +84,7 @@ class ManifestValidationTests(unittest.TestCase):
             {
                 "BootstrapError",
                 "_required",
+                "_string_fields",
                 "_selected_cloud",
                 "validate_manifest",
                 "load_manifest_file",
@@ -119,6 +122,33 @@ class ManifestValidationTests(unittest.TestCase):
         with self.assertRaises(self.namespace["BootstrapError"]):
             self.namespace["validate_manifest"](source)
 
+        source = manifest()
+        source["vims"][0]["credentials"]["clouds"]["katana"]["verify"] = "false"
+        with self.assertRaises(self.namespace["BootstrapError"]):
+            self.namespace["validate_manifest"](source)
+
+    def test_empty_bootstrap_is_rejected(self):
+        source = manifest()
+        source["nfvos"] = []
+        with self.assertRaises(self.namespace["BootstrapError"]):
+            self.namespace["validate_manifest"](source)
+
+    def test_malformed_ids_and_link_config_are_rejected_cleanly(self):
+        source = manifest()
+        source["nfvos"][0]["id"] = ["not", "an", "id"]
+        with self.assertRaises(self.namespace["BootstrapError"]):
+            self.namespace["validate_manifest"](source)
+
+        source = manifest()
+        source["vims"][0]["nfvos"][0]["config"] = ["not", "an", "object"]
+        with self.assertRaises(self.namespace["BootstrapError"]):
+            self.namespace["validate_manifest"](source)
+
+        source = manifest()
+        source["vims"] = []
+        with self.assertRaises(self.namespace["BootstrapError"]):
+            self.namespace["validate_manifest"](source)
+
     def test_many_to_many_links_are_accepted(self):
         source = manifest()
         second_nfvo = copy.deepcopy(source["nfvos"][0])
@@ -140,11 +170,6 @@ class ManifestValidationTests(unittest.TestCase):
 
         self.assertEqual(len(result["nfvos"]), 2)
         self.assertEqual(sum(len(vim["nfvos"]) for vim in result["vims"]), 4)
-
-        source = manifest()
-        source["vims"][0]["credentials"]["clouds"]["katana"]["verify"] = "false"
-        with self.assertRaises(self.namespace["BootstrapError"]):
-            self.namespace["validate_manifest"](source)
 
     def test_credential_files_are_resolved_relative_to_manifest(self):
         source = manifest()
@@ -177,6 +202,41 @@ class ManifestValidationTests(unittest.TestCase):
             path.write_text(json.dumps(source))
             with self.assertRaises(self.namespace["BootstrapError"]):
                 self.namespace["load_manifest_file"](path)
+
+
+class CliManifestTests(unittest.TestCase):
+    def test_custom_ca_is_mapped_to_the_server_mount(self):
+        namespace = load_definitions(
+            "katana-cli/cli/commands/cmd_bootstrap.py",
+            {"load_bootstrap_data"},
+            {"click": ClickStub, "yaml": YamlStub, "os": os},
+        )
+        source = manifest()
+        source["nfvos"][0].pop("credentials")
+        source["nfvos"][0]["credentials_file"] = "secrets/osm.yaml"
+        source["vims"][0].pop("credentials")
+        source["vims"][0]["credentials_file"] = "secrets/clouds.yaml"
+        clouds = manifest()["vims"][0]["credentials"]
+        clouds["clouds"]["katana"]["cacert"] = "ca.pem"
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            secrets = root / "secrets"
+            secrets.mkdir()
+            (secrets / "osm.yaml").write_text(
+                json.dumps({"username": "admin", "password": "secret"})
+            )
+            (secrets / "clouds.yaml").write_text(json.dumps(clouds))
+            (secrets / "ca.pem").write_text("test-ca")
+            path = root / "bootstrap.yaml"
+            path.write_text(json.dumps(source))
+
+            result = namespace["load_bootstrap_data"](str(path))
+
+        self.assertEqual(
+            result["vims"][0]["credentials"]["clouds"]["katana"]["cacert"],
+            "/bootstrap/secrets/ca.pem",
+        )
 
 
 class OsmStub:
@@ -215,13 +275,15 @@ class OsmStub:
 
 
 class LinkReconciliationTests(unittest.TestCase):
-    def _ensure_link(self, mongo):
-        namespace = load_definitions(
+    def _link_namespace(self, mongo):
+        return load_definitions(
             "katana-nbi/katana/shared_utils/bootstrapUtils.py",
             {"BootstrapError", "_account_identity", "_ensure_link"},
             {"mongoUtils": mongo, "time": time, "uuid": uuid},
         )
-        return namespace["_ensure_link"]
+
+    def _ensure_link(self, mongo):
+        return self._link_namespace(mongo)["_ensure_link"]
 
     def test_link_creation_uses_configured_openstack_project(self):
         mongo = MongoStub()
@@ -319,6 +381,202 @@ class LinkReconciliationTests(unittest.TestCase):
         self.assertEqual(action, "created")
         self.assertEqual(record["_id"], "managed-link")
         self.assertIn(unrelated, mongo.collections["nfvo_vim_links"])
+
+    def test_safe_link_configuration_change_updates_remote_account(self):
+        mongo = MongoStub()
+        osm = OsmStub()
+        ensure_link = self._ensure_link(mongo)
+        nfvo = {"id": "osm-main"}
+        vim = {
+            "id": "core-openstack",
+            "auth_url": "https://openstack/v3",
+            "admin_project_name": "katana-project",
+            "username": "katana",
+            "password": "secret",
+        }
+        ensure_link(
+            nfvo,
+            vim,
+            {"id": "osm-main", "account_name": "katana-link", "config": {}},
+            osm,
+        )
+
+        record, action = ensure_link(
+            nfvo,
+            vim,
+            {
+                "id": "osm-main",
+                "account_name": "katana-link",
+                "config": {"security_groups": "default"},
+            },
+            osm,
+        )
+
+        self.assertEqual(action, "updated")
+        self.assertTrue(osm.updated)
+        self.assertEqual(record["config"], {"security_groups": "default"})
+
+    def test_remote_identity_drift_is_rejected(self):
+        osm = OsmStub()
+        osm.accounts["existing"] = {
+            "_id": "existing",
+            "name": "katana-link",
+            "vim_type": "openstack",
+            "vim_url": "https://openstack/v3",
+            "vim_tenant_name": "different-project",
+        }
+        namespace = self._link_namespace(MongoStub())
+        ensure_link = namespace["_ensure_link"]
+
+        with self.assertRaises(namespace["BootstrapError"]) as raised:
+            ensure_link(
+                {"id": "osm-main"},
+                {
+                    "id": "core-openstack",
+                    "auth_url": "https://openstack/v3",
+                    "admin_project_name": "katana-project",
+                    "username": "katana",
+                    "password": "secret",
+                },
+                {"id": "osm-main", "account_name": "katana-link"},
+                osm,
+            )
+
+        self.assertEqual(raised.exception.status_code, 409)
+
+
+class ReconciliationRecoveryTests(unittest.TestCase):
+    def test_partial_failure_is_recorded_and_rerun_succeeds(self):
+        mongo = MongoStub()
+        statuses = []
+        calls = {"links": 0, "descriptors": 0}
+
+        class ClientStub:
+            def bootstrapNfvo(self):
+                calls["descriptors"] += 1
+
+        client = ClientStub()
+
+        def acquire_lock(owner):
+            mongo.add(
+                "bootstrap_locks",
+                {
+                    "_id": "infrastructure-bootstrap",
+                    "owner": owner,
+                    "expires_at": time.time() + 60,
+                },
+            )
+
+        def ensure_link(nfvo, vim, link, selected_client, credentials_changed):
+            calls["links"] += 1
+            if calls["links"] == 1:
+                raise namespace["BootstrapError"]("temporary OSM failure", 502)
+            return (
+                {"nfvo_id": nfvo["id"], "vim_id": vim["id"]},
+                "created",
+            )
+
+        namespace = load_definitions(
+            "katana-nbi/katana/shared_utils/bootstrapUtils.py",
+            {"BootstrapError", "reconcile_manifest"},
+            {
+                "validate_manifest": lambda value: value,
+                "uuid": uuid,
+                "time": time,
+                "_acquire_lock": acquire_lock,
+                "_ensure_nfvo": lambda data: (
+                    {"id": data["id"]},
+                    client,
+                    "created",
+                ),
+                "_ensure_vim": lambda data: (
+                    {"id": data["id"]},
+                    "created",
+                    True,
+                ),
+                "_ensure_link": ensure_link,
+                "_store_status": statuses.append,
+                "mongoUtils": mongo,
+                "LOCK_ID": "infrastructure-bootstrap",
+            },
+        )
+
+        with self.assertRaises(namespace["BootstrapError"]):
+            namespace["reconcile_manifest"](manifest())
+
+        result = namespace["reconcile_manifest"](manifest())
+
+        self.assertEqual(statuses[0]["status"], "failed")
+        self.assertEqual(statuses[-1]["status"], "succeeded")
+        self.assertEqual(result["status"], "succeeded")
+        self.assertEqual(calls["descriptors"], 1)
+        self.assertFalse(mongo.collections.get("bootstrap_locks"))
+
+    def test_reconciliation_processes_every_many_to_many_link(self):
+        source = manifest()
+        second_nfvo = copy.deepcopy(source["nfvos"][0])
+        second_nfvo["id"] = "osm-backup"
+        source["nfvos"].append(second_nfvo)
+        source["vims"][0]["nfvos"].append({"id": "osm-backup"})
+        second_vim = copy.deepcopy(source["vims"][0])
+        second_vim["id"] = "edge-openstack"
+        second_vim["location"] = "edge"
+        second_vim["nfvos"] = [{"id": "osm-main"}, {"id": "osm-backup"}]
+        source["vims"].append(second_vim)
+        mongo = MongoStub()
+        seen_links = []
+
+        class ClientStub:
+            @staticmethod
+            def bootstrapNfvo():
+                pass
+
+        def acquire_lock(owner):
+            mongo.add(
+                "bootstrap_locks",
+                {"_id": "infrastructure-bootstrap", "owner": owner},
+            )
+
+        def ensure_link(nfvo, vim, link, client, credentials_changed):
+            seen_links.append((nfvo["id"], vim["id"]))
+            return {"nfvo_id": nfvo["id"], "vim_id": vim["id"]}, "created"
+
+        namespace = load_definitions(
+            "katana-nbi/katana/shared_utils/bootstrapUtils.py",
+            {"BootstrapError", "reconcile_manifest"},
+            {
+                "validate_manifest": lambda value: value,
+                "uuid": uuid,
+                "time": time,
+                "_acquire_lock": acquire_lock,
+                "_ensure_nfvo": lambda data: (
+                    {"id": data["id"]},
+                    ClientStub(),
+                    "created",
+                ),
+                "_ensure_vim": lambda data: (
+                    {"id": data["id"]},
+                    "created",
+                    True,
+                ),
+                "_ensure_link": ensure_link,
+                "_store_status": lambda status: None,
+                "mongoUtils": mongo,
+                "LOCK_ID": "infrastructure-bootstrap",
+            },
+        )
+
+        namespace["reconcile_manifest"](source)
+
+        self.assertEqual(
+            set(seen_links),
+            {
+                ("osm-main", "core-openstack"),
+                ("osm-backup", "core-openstack"),
+                ("osm-main", "edge-openstack"),
+                ("osm-backup", "edge-openstack"),
+            },
+        )
 
 
 class BootstrapLockTests(unittest.TestCase):

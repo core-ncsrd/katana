@@ -4077,16 +4077,59 @@
           },
           "vims": {
             "type": "array",
+            "minItems": 1,
             "description": "OpenStack VIMs with credentials and NFVO link definitions",
             "items": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "type": {"type": "string", "enum": ["openstack"]},
+                "location": {"type": "string"},
+                "cloud": {"type": "string"},
+                "credentials": {
+                  "type": "object",
+                  "description": "Resolved standard clouds.yaml content"
+                },
+                "nfvos": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "string"},
+                      "account_name": {"type": "string"},
+                      "config": {"type": "object"}
+                    },
+                    "required": ["id"]
+                  }
+                }
+              },
+              "required": ["id", "type", "location", "credentials", "nfvos"]
             }
           },
           "nfvos": {
             "type": "array",
+            "minItems": 1,
             "description": "OSM NFVOs with resolved credentials",
             "items": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "type": {"type": "string", "enum": ["osm"]},
+                "endpoint": {"type": "string"},
+                "project": {"type": "string"},
+                "credentials": {
+                  "type": "object",
+                  "properties": {
+                    "username": {"type": "string"},
+                    "password": {"type": "string", "format": "password"}
+                  },
+                  "required": ["username", "password"]
+                },
+                "tls_verify": {"type": "boolean", "default": true},
+                "ca_file": {"type": "string"}
+              },
+              "required": ["id", "type", "endpoint", "project", "credentials"]
             }
           }
         },

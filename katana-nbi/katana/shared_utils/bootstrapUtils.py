@@ -123,6 +123,12 @@ def _required(data, fields, label):
         raise BootstrapError(f"{label} is missing: {', '.join(missing)}")
 
 
+def _string_fields(data, fields, label):
+    invalid = [field for field in fields if not isinstance(data.get(field), str)]
+    if invalid:
+        raise BootstrapError(f"{label} fields must be strings: {', '.join(invalid)}")
+
+
 def validate_manifest(manifest):
     if not isinstance(manifest, dict):
         raise BootstrapError("Bootstrap manifest must be an object")
@@ -133,18 +139,28 @@ def validate_manifest(manifest):
     vims = manifest.get("vims", [])
     if not isinstance(nfvos, list) or not isinstance(vims, list):
         raise BootstrapError("Bootstrap fields nfvos and vims must be arrays")
+    if not nfvos:
+        raise BootstrapError("Bootstrap manifest must configure at least one NFVO")
+    if not vims:
+        raise BootstrapError("Bootstrap manifest must configure at least one VIM")
 
     nfvo_ids = set()
     for nfvo in nfvos:
         if not isinstance(nfvo, dict):
             raise BootstrapError("Every NFVO entry must be an object")
         _required(nfvo, ("id", "type", "endpoint", "project", "credentials"), "NFVO")
+        _string_fields(nfvo, ("id", "type", "endpoint", "project"), "NFVO")
         if str(nfvo["type"]).lower() != "osm":
             raise BootstrapError(f"NFVO {nfvo['id']} has unsupported type {nfvo['type']}")
         credentials = nfvo["credentials"]
         if not isinstance(credentials, dict):
             raise BootstrapError(f"NFVO {nfvo['id']} credentials must be an object")
         _required(credentials, ("username", "password"), f"NFVO {nfvo['id']} credentials")
+        _string_fields(
+            credentials,
+            ("username", "password"),
+            f"NFVO {nfvo['id']} credentials",
+        )
         if not isinstance(nfvo.get("tls_verify", True), bool):
             raise BootstrapError(f"NFVO {nfvo['id']} tls_verify must be true or false")
         if nfvo.get("ca_file") is not None and not isinstance(nfvo["ca_file"], str):
@@ -163,15 +179,23 @@ def validate_manifest(manifest):
         if not isinstance(vim, dict):
             raise BootstrapError("Every VIM entry must be an object")
         _required(vim, ("id", "type", "location", "credentials"), "VIM")
+        _string_fields(vim, ("id", "type", "location"), "VIM")
+        if vim.get("cloud") is not None and not isinstance(vim["cloud"], str):
+            raise BootstrapError(f"VIM {vim['id']} cloud must be a string")
         if str(vim["type"]).lower() != "openstack":
             raise BootstrapError(f"VIM {vim['id']} has unsupported type {vim['type']}")
         if vim["id"] in vim_ids:
             raise BootstrapError(f"Duplicate VIM id {vim['id']}")
         vim_ids.add(vim["id"])
         try:
-            _openstack_auth(vim)
+            auth = _openstack_auth(vim)
         except InfrastructureError as exc:
             raise BootstrapError(str(exc), exc.status_code) from exc
+        _string_fields(
+            auth,
+            ("auth_url", "username", "password", "admin_project_name"),
+            f"VIM {vim['id']} credentials",
+        )
         cloud = _selected_cloud(vim)
         if not isinstance(cloud.get("verify", True), bool):
             raise BootstrapError(f"VIM {vim['id']} verify must be true or false")
@@ -189,6 +213,15 @@ def validate_manifest(manifest):
             if not isinstance(link, dict):
                 raise BootstrapError(f"VIM {vim['id']} NFVO links must be objects")
             _required(link, ("id",), f"VIM {vim['id']} NFVO link")
+            _string_fields(link, ("id",), f"VIM {vim['id']} NFVO link")
+            if link.get("account_name") is not None and not isinstance(
+                link["account_name"], str
+            ):
+                raise BootstrapError(
+                    f"VIM {vim['id']} NFVO account_name must be a string"
+                )
+            if not isinstance(link.get("config", {}), dict):
+                raise BootstrapError(f"VIM {vim['id']} NFVO config must be an object")
             if link["id"] not in nfvo_ids:
                 raise BootstrapError(
                     f"VIM {vim['id']} references unknown NFVO {link['id']}"

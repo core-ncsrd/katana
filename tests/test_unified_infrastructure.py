@@ -290,6 +290,7 @@ class OsmAuthenticationRetryTests(unittest.TestCase):
         def __init__(self, data=None, status_code=200):
             self.data = data
             self.status_code = status_code
+            self.content = b"{}" if data is not None else b""
 
         def raise_for_status(self):
             pass
@@ -309,13 +310,17 @@ class OsmAuthenticationRetryTests(unittest.TestCase):
             self.calls = 0
             self.call_kwargs = []
 
-        def post(self, *args, **kwargs):
+        def _request(self, *args, **kwargs):
             self.call_kwargs.append(kwargs)
             outcome = self.outcomes[self.calls]
             self.calls += 1
             if isinstance(outcome, Exception):
                 raise outcome
             return outcome
+
+        post = _request
+        get = _request
+        patch = _request
 
     def _osm(self, outcomes):
         requests_stub = self.RequestsStub(outcomes)
@@ -421,6 +426,38 @@ class OsmAuthenticationRetryTests(unittest.TestCase):
         self.assertEqual(payload["name"], "katana-link")
         self.assertEqual(payload["vim_tenant_name"], "katana-project")
         self.assertTrue(requests_stub.call_kwargs[-1]["verify"])
+
+    def test_vim_list_get_and_patch_use_structured_requests(self):
+        account = {"_id": "vim-account", "name": "katana-link"}
+        osm, requests_stub, _, _ = self._osm(
+            [
+                self.ResponseStub([account]),
+                self.ResponseStub(account),
+                self.ResponseStub({}),
+            ]
+        )
+        osm.token = "token"
+
+        self.assertEqual(osm.listVims(), [account])
+        self.assertEqual(osm.getVim("vim-account"), account)
+        osm.updateVim(
+            "vim-account",
+            vim_user="katana",
+            vim_password="secret",
+            config={"security_groups": "default"},
+        )
+
+        self.assertEqual(
+            requests_stub.call_kwargs[-1]["json"],
+            {
+                "vim_user": "katana",
+                "vim_password": "secret",
+                "config": {"security_groups": "default"},
+            },
+        )
+        self.assertTrue(
+            all(call["verify"] for call in requests_stub.call_kwargs)
+        )
 
     def test_vim_readiness_failure_is_explicit(self):
         osm, _, _, error_type = self._osm([])

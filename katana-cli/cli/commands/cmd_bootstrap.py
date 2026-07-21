@@ -16,7 +16,7 @@ def load_bootstrap_data(filename):
         raise click.ClickException(f"Unable to parse bootstrap manifest: {exc}")
     if not isinstance(data, dict):
         raise click.ClickException("Bootstrap manifest must contain a YAML object")
-    base = os.path.dirname(os.path.abspath(filename))
+    base = os.path.dirname(os.path.realpath(filename))
     for kind in ("nfvos", "vims"):
         entries = data.get(kind, [])
         if not isinstance(entries, list):
@@ -47,7 +47,7 @@ def load_bootstrap_data(filename):
             if kind == "vims" and credentials.get("clouds"):
                 cloud_name = entry.get("cloud") or next(iter(credentials["clouds"]))
                 cloud = credentials["clouds"].get(cloud_name, {})
-                if cloud.get("cacert") and not os.path.isabs(cloud["cacert"]):
+                if cloud.get("cacert"):
                     local_ca = os.path.realpath(
                         os.path.join(os.path.dirname(path), cloud["cacert"])
                     )
