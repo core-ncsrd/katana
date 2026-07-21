@@ -18,5 +18,7 @@ service_descriptor:
   ns_list:
     - nsd-id: 5c17d35a-0cd3-42a3-95c6-4dec4c27f906
       ns-name: hackfest-basic-frontend-retry-test-01
+      nfvo-id: osm-main
+      target: core-openstack
       placement: core
       optional: false

@@ -52,7 +52,16 @@ class Osm:
     Class implementing the communication API with OSM
     """
 
-    def __init__(self, nfvo_id, ip, username, password, project_id="admin", timeout=5):
+    def __init__(
+        self,
+        nfvo_id,
+        ip,
+        username,
+        password,
+        project_id="admin",
+        timeout=5,
+        verify=True,
+    ):
         """
         Initialize an object of the class
         """
@@ -63,31 +72,32 @@ class Osm:
         self.token = ""
         self.timeout = timeout
         self.nfvo_id = nfvo_id
+        self.verify = verify
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        if "verify" not in self.__dict__:
+            self.verify = False
 
     def getToken(self):
         """
         Returns a valid Token for OSM
         """
         headers = {
-            "Content-Type": "application/yaml",
+            "Content-Type": "application/json",
             "Accept": "application/json",
         }
-
-        data = (
-            "{username: '"
-            + self.username
-            + "', password: '"
-            + self.password
-            + "', project_id: '"
-            + self.project_id
-            + "'}"
-        )
+        payload = {
+            "username": self.username,
+            "password": self.password,
+            "project_id": self.project_id,
+        }
         url = f"https://{self.ip}/osm/admin/v1/tokens"
         auth_timeout = max(self.timeout, OSM_AUTH_TIMEOUT)
         for attempt in range(1, OSM_REQUEST_ATTEMPTS + 1):
             try:
                 response = requests.post(
-                    url, headers=headers, data=data, verify=False, timeout=auth_timeout
+                    url, headers=headers, json=payload, verify=self.verify, timeout=auth_timeout
                 )
                 response.raise_for_status()
                 response_data = response.json()
@@ -109,31 +119,50 @@ class Osm:
             f"OSM authentication failed after {OSM_REQUEST_ATTEMPTS} attempts"
         )
 
-    def addVim(self, vimName, vimPassword, vimType, vimUrl, vimUser, secGroup):
+    def _admin_headers(self):
+        if not self.token:
+            self.getToken()
+        return {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.token}",
+        }
+
+    def addVim(
+        self,
+        vimName,
+        vimPassword,
+        vimType,
+        vimUrl,
+        vimUser,
+        secGroup,
+        vimTenantName=None,
+    ):
         """
         Registers a VIM to the OSM VIM account list
         Returns VIM id
         """
         osm_url = f"https://{self.ip}/osm/admin/v1/vim_accounts"
-        data = '{{ name: "{0}", vim_password: "{1}", vim_tenant_name: "{2}",\
-            vim_type: "{3}", vim_url: "{4}", vim_user: "{5}" , config: {6}}}'.format(
-            vimName, vimPassword, vimName, vimType, vimUrl, vimUser, secGroup
-        )
+        payload = {
+            "name": vimName,
+            "vim_password": vimPassword,
+            "vim_tenant_name": vimTenantName or vimName,
+            "vim_type": vimType,
+            "vim_url": vimUrl,
+            "vim_user": vimUser,
+            "config": secGroup or {},
+        }
         write_timeout = max(self.timeout, OSM_WRITE_TIMEOUT)
         for attempt in range(1, OSM_REQUEST_ATTEMPTS + 1):
             if not self.token:
                 self.getToken()
-            headers = {
-                "Content-Type": "application/yaml",
-                "Accept": "application/json",
-                "Authorization": f"Bearer {self.token}",
-            }
+            headers = self._admin_headers()
             try:
                 response = requests.post(
                     osm_url,
                     headers=headers,
-                    data=data,
-                    verify=False,
+                    json=payload,
+                    verify=self.verify,
                     timeout=write_timeout,
                 )
                 if response.status_code == 401:
@@ -154,6 +183,87 @@ class Osm:
         raise OsmAuthenticationError(
             f"OSM authentication failed after {OSM_REQUEST_ATTEMPTS} attempts"
         )
+
+    def listVims(self):
+        url = f"https://{self.ip}/osm/admin/v1/vim_accounts"
+        for _ in range(OSM_REQUEST_ATTEMPTS):
+            response = requests.get(
+                url,
+                headers=self._admin_headers(),
+                verify=self.verify,
+                timeout=max(self.timeout, OSM_AUTH_TIMEOUT),
+            )
+            if response.status_code == 401:
+                self.token = ""
+                continue
+            response.raise_for_status()
+            return response.json() or []
+        raise OsmAuthenticationError(
+            f"OSM authentication failed after {OSM_REQUEST_ATTEMPTS} attempts"
+        )
+
+    def getVim(self, vim_id):
+        url = f"https://{self.ip}/osm/admin/v1/vim_accounts/{vim_id}"
+        for _ in range(OSM_REQUEST_ATTEMPTS):
+            response = requests.get(
+                url,
+                headers=self._admin_headers(),
+                verify=self.verify,
+                timeout=max(self.timeout, OSM_AUTH_TIMEOUT),
+            )
+            if response.status_code == 401:
+                self.token = ""
+                continue
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+            return response.json()
+        raise OsmAuthenticationError(
+            f"OSM authentication failed after {OSM_REQUEST_ATTEMPTS} attempts"
+        )
+
+    def updateVim(self, vim_id, vim_user, vim_password, config=None):
+        url = f"https://{self.ip}/osm/admin/v1/vim_accounts/{vim_id}"
+        payload = {
+            "vim_user": vim_user,
+            "vim_password": vim_password,
+            "config": config or {},
+        }
+        for _ in range(OSM_REQUEST_ATTEMPTS):
+            response = requests.patch(
+                url,
+                headers=self._admin_headers(),
+                json=payload,
+                verify=self.verify,
+                timeout=max(self.timeout, OSM_WRITE_TIMEOUT),
+            )
+            if response.status_code == 401:
+                self.token = ""
+                continue
+            response.raise_for_status()
+            return response.json() if response.content else {}
+        raise OsmAuthenticationError(
+            f"OSM authentication failed after {OSM_REQUEST_ATTEMPTS} attempts"
+        )
+
+    def waitForVim(self, vim_id, attempts=12, interval=5):
+        for attempt in range(attempts):
+            account = self.getVim(vim_id)
+            if not account:
+                raise OsmRequestError(f"OSM VIM account {vim_id} disappeared")
+            state = (account.get("_admin") or {}).get("operationalState")
+            state = str(state or account.get("operationalState") or "").upper()
+            if state in {"ENABLED", "RUNNING", "READY"}:
+                return account
+            if state in {"ERROR", "FAILED", "DISABLED"}:
+                detail = (account.get("_admin") or {}).get("detailed-status")
+                raise OsmRequestError(
+                    f"OSM VIM account {vim_id} failed validation"
+                    + (f": {detail}" if detail else "")
+                )
+            if attempt + 1 < attempts:
+                time.sleep(interval)
+        raise OsmRequestError(f"OSM VIM account {vim_id} did not become ready")
 
     def instantiateNs(self, nsName, nsdId, vimAccountId):
         """
@@ -179,7 +289,7 @@ class Osm:
                     osm_url,
                     headers=headers,
                     data=data,
-                    verify=False,
+                    verify=self.verify,
                     timeout=write_timeout,
                 )
                 if response.status_code == 401:
@@ -215,7 +325,7 @@ class Osm:
             }
             try:
                 response = requests.get(
-                    osm_url, headers=headers, verify=False, timeout=self.timeout
+                    osm_url, headers=headers, verify=self.verify, timeout=self.timeout
                 )
                 if response.status_code == 401:
                     self.getToken()
@@ -260,7 +370,7 @@ class Osm:
                 "Accept": "application/json",
                 "Authorization": f"Bearer {self.token}",
             }
-            response = requests.get(osm_url, headers=headers, verify=False)
+            response = requests.get(osm_url, headers=headers, verify=self.verify)
             if response.status_code != 401:
                 try:
                     response_data = response.json()
@@ -309,7 +419,7 @@ class Osm:
                 "Accept": "application/json",
                 "Authorization": f"Bearer {self.token}",
             }
-            response = requests.delete(osm_url, headers=headers, verify=False)
+            response = requests.delete(osm_url, headers=headers, verify=self.verify)
             if response.status_code != 401:
                 return
             else:
@@ -326,7 +436,7 @@ class Osm:
                 "Accept": "application/yaml",
                 "Authorization": f"Bearer {self.token}",
             }
-            response = requests.delete(osm_url, headers=headers, verify=False)
+            response = requests.delete(osm_url, headers=headers, verify=self.verify)
             if response.status_code != 401:
                 return
             else:
@@ -350,7 +460,7 @@ class Osm:
                 "Accept": "application/json",
                 "Authorization": f"Bearer {self.token}",
             }
-            response = requests.get(url, headers=headers, verify=False)
+            response = requests.get(url, headers=headers, verify=self.verify)
             if response.status_code != 401:
                 try:
                     response_data = response.json()
@@ -400,7 +510,7 @@ class Osm:
                 "Accept": "application/json",
                 "Authorization": f"Bearer {self.token}",
             }
-            response = requests.get(url, headers=headers, verify=False)
+            response = requests.get(url, headers=headers, verify=self.verify)
             if response.status_code != 401:
                 try:
                     response_data = response.json()
@@ -466,7 +576,7 @@ class Osm:
                 "Accept": "application/json",
                 "Authorization": f"Bearer {self.token}",
             }
-            response = requests.get(osm_url, headers=headers, verify=False)
+            response = requests.get(osm_url, headers=headers, verify=self.verify)
             if response.status_code != 401:
                 try:
                     response_data = response.json()

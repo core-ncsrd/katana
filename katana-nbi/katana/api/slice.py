@@ -13,10 +13,6 @@ import requests
 import urllib3
 
 from katana.shared_utils.kafkaUtils import kafkaUtils
-from katana.shared_utils.infrastructureUtils import (
-    InfrastructureError,
-    ensure_infrastructure,
-)
 from katana.shared_utils.mongoUtils import mongoUtils
 from katana.slice_mapping import slice_mapping
 
@@ -61,12 +57,6 @@ VM_PANELS = [
     "vm_disk_write_bytes",
     "vm_disk_errors",
 ]
-
-
-def split_infrastructure(data):
-    """Return a credential-free slice request and its optional infrastructure."""
-    clean_data = dict(data)
-    return clean_data, clean_data.pop("infrastructure", None)
 
 
 def queued_slice_record(nest):
@@ -486,67 +476,71 @@ class SliceView(FlaskView):
 
         return None
 
-    def _explicit_deployment_runtime(self, data, required=False):
+    def _validate_deployment_targets(self, data):
         service_descriptor = data.get("service_descriptor") or {}
         ns_list = service_descriptor.get("ns_list") or []
-        if required and not ns_list:
-            return None, (
-                "Error: service_descriptor.ns_list is required when infrastructure is provided",
-                400,
-            )
+        if not ns_list:
+            return None, ("Error: service_descriptor.ns_list is required", 400)
 
         runtimes = set()
         for ns in ns_list:
             if not isinstance(ns, dict) or not ns.get("nsd-id"):
                 return None, ("Error: Every network service requires nsd-id", 400)
-            nsd = mongoUtils.find("nsd", {"nsd-id": ns["nsd-id"]})
-            if not nsd:
-                if required:
-                    return None, (f"Error: NSD {ns['nsd-id']} is not registered", 400)
-                continue
-            runtime = nsd.get("deployment_runtime")
-            requested_nfvo_id = ns.get("nfvo-id") or ns.get("nfvo_id")
-            existing_vim_account = ns.get("osm-vim-account-id") or ns.get(
-                "osm_vim_account_id"
-            )
-            if requested_nfvo_id and not mongoUtils.find(
-                "nfvo", {"id": requested_nfvo_id}
-            ):
+            if not ns.get("nfvo-id"):
+                return None, ("Error: Every network service requires nfvo-id", 400)
+            if not ns.get("target"):
+                return None, ("Error: Every network service requires target", 400)
+            if ns.get("osm-vim-account-id") is not None or ns.get("osm_vim_account_id") is not None:
                 return None, (
-                    f"Error: NFVO {requested_nfvo_id} is not registered",
+                    "Error: osm-vim-account-id is managed by Time-0 bootstrap and cannot be supplied by a slice",
                     400,
                 )
-            if existing_vim_account is not None:
-                if (
-                    not isinstance(existing_vim_account, str)
-                    or not existing_vim_account.strip()
-                ):
-                    return None, ("Error: osm-vim-account-id must be a string", 400)
-                if runtime != "openstack":
-                    return None, (
-                        "Error: osm-vim-account-id can only be used with OpenStack NSDs",
-                        400,
-                    )
-                if not requested_nfvo_id:
-                    return None, (
-                        "Error: nfvo-id is required with osm-vim-account-id",
-                        400,
-                    )
-                target_id = ns.get("target") or ns.get("vim-id") or ns.get("vim_id")
-                if not target_id:
-                    return None, (
-                        "Error: target is required with osm-vim-account-id",
-                        400,
-                    )
-                target = mongoUtils.find("vim", {"id": target_id})
-                if not target or target.get("type", "").lower() != "openstack":
-                    return None, (
-                        f"Error: OpenStack infrastructure {target_id} is not registered",
-                        400,
-                    )
+            nsd = mongoUtils.find("nsd", {"nsd-id": ns["nsd-id"]})
+            if not nsd:
+                return None, (f"Error: NSD {ns['nsd-id']} is not registered", 400)
+            runtime = nsd.get("deployment_runtime")
+            nfvo_id = ns["nfvo-id"]
+            if not mongoUtils.find("nfvo", {"id": nfvo_id}):
+                return None, (
+                    f"Error: NFVO {nfvo_id} is not registered",
+                    400,
+                )
+            if nsd.get("nfvo_id") != nfvo_id:
+                return None, (
+                    f"Error: NFVO {nfvo_id} does not own NSD {ns['nsd-id']}",
+                    400,
+                )
             if runtime in ("mixed", "unknown"):
                 return None, (
                     f"Error: NSD {ns['nsd-id']} has unsupported {runtime} deployment runtime",
+                    400,
+                )
+            target = mongoUtils.find("vim", {"id": ns["target"]})
+            if not target:
+                target = mongoUtils.find("k8sclusters", {"id": ns["target"]})
+            if not target:
+                return None, (f"Error: Infrastructure {ns['target']} is not registered", 400)
+            if runtime and target.get("type", "").lower() != runtime:
+                return None, (
+                    f"Error: Infrastructure {ns['target']} does not support {runtime}",
+                    400,
+                )
+            placement = str(ns.get("placement", "")).lower()
+            if placement and target.get("location") != placement:
+                return None, (
+                    f"Error: Infrastructure {ns['target']} is not in location {placement}",
+                    400,
+                )
+            if target.get("type", "").lower() == "openstack" and not mongoUtils.find(
+                "nfvo_vim_links", {"nfvo_id": nfvo_id, "vim_id": target["id"]}
+            ):
+                return None, (
+                    f"Error: Infrastructure {target['id']} is not linked to NFVO {nfvo_id}",
+                    400,
+                )
+            if target.get("type", "").lower() == "kubernetes" and target.get("nfvo_id") != nfvo_id:
+                return None, (
+                    f"Error: Kubernetes infrastructure {target['id']} is not linked to NFVO {nfvo_id}",
                     400,
                 )
             if runtime:
@@ -554,9 +548,52 @@ class SliceView(FlaskView):
 
         if len(runtimes) > 1:
             return None, ("Error: A slice cannot mix OpenStack and Kubernetes services", 400)
-        if required and not runtimes:
+        if not runtimes:
             return None, ("Error: Unable to determine the NSD deployment runtime", 400)
         return next(iter(runtimes), None), None
+
+    def _validate_modify_payload(self, islice, updates):
+        if not isinstance(updates, dict) or not isinstance(updates.get("details"), dict):
+            return "Error: Slice modification requires a details object", 400
+        details = updates["details"]
+        if updates.get("action") == "AddNS":
+            required = ("nsd_id", "ns_name", "location", "nfvo_id", "target")
+            missing = [field for field in required if not details.get(field)]
+            if missing:
+                return f"Error: AddNS is missing: {', '.join(missing)}", 400
+            _, error = self._validate_deployment_targets(
+                {
+                    "service_descriptor": {
+                        "ns_list": [
+                            {
+                                "nsd-id": details["nsd_id"],
+                                "ns-name": details["ns_name"],
+                                "placement": details["location"],
+                                "nfvo-id": details["nfvo_id"],
+                                "target": details["target"],
+                            }
+                        ]
+                    }
+                }
+            )
+            return error
+        if updates.get("action") == "RestartNS" and details.get("change_vim"):
+            target_id = details.get("target")
+            if not target_id:
+                return "Error: RestartNS requires target when change_vim is true", 400
+            try:
+                current = islice["ns_inst_info"][details["ns_id"]][details["location"]]
+            except KeyError:
+                return "Error: Network service instance was not found", 404
+            target = mongoUtils.find("vim", {"id": target_id})
+            if not target or target.get("location") != details["location"]:
+                return f"Error: Infrastructure {target_id} is not registered in {details['location']}", 400
+            if not mongoUtils.find(
+                "nfvo_vim_links",
+                {"nfvo_id": current["nfvo-id"], "vim_id": target_id},
+            ):
+                return f"Error: Infrastructure {target_id} is not linked to NFVO {current['nfvo-id']}", 400
+        return None
 
     def index(self):
         """
@@ -732,6 +769,9 @@ class SliceView(FlaskView):
         result = mongoUtils.get("slice", uuid)
         if not result:
             return f"Error: No such slice: {uuid}", 404
+        validation_error = self._validate_modify_payload(result, request.json)
+        if validation_error:
+            return validation_error
         # Send the message to katana-mngr
         producer = kafkaUtils.create_producer()
         slice_message = {"action": "update", "slice_id": uuid, "updates": request.json}
@@ -747,7 +787,8 @@ class SliceView(FlaskView):
         data = request.get_json(silent=True) or {}
         if not isinstance(data, dict):
             return "Error: Request body must be a JSON object", 400
-        data, infrastructure = split_infrastructure(data)
+        if "infrastructure" in data:
+            return "Error: infrastructure must be registered by Time-0 bootstrap", 400
         data["_id"] = new_uuid
         validation_error = self._validate_slice_payload(data)
         if validation_error:
@@ -764,33 +805,9 @@ class SliceView(FlaskView):
                         400,
                     )
 
-        deployment_runtime, runtime_error = self._explicit_deployment_runtime(
-            data, required=infrastructure is not None
-        )
+        deployment_runtime, runtime_error = self._validate_deployment_targets(data)
         if runtime_error:
             return runtime_error
-
-        infrastructure_id = None
-        if infrastructure is not None:
-            if not isinstance(infrastructure, dict):
-                return "Error: Field infrastructure must be a JSON object", 400
-            if str(infrastructure.get("type", "")).lower() != deployment_runtime:
-                return (
-                    f"Error: Infrastructure type does not match NSD runtime {deployment_runtime}",
-                    400,
-                )
-            for ns in (data.get("service_descriptor") or {}).get("ns_list") or []:
-                nsd = mongoUtils.find("nsd", {"nsd-id": ns["nsd-id"]})
-                if nsd.get("nfvo_id") != infrastructure.get("nfvo_id"):
-                    return (
-                        f"Error: Infrastructure NFVO does not own NSD {ns['nsd-id']}",
-                        400,
-                    )
-            try:
-                registered, _ = ensure_infrastructure(infrastructure)
-            except InfrastructureError as exc:
-                return str(exc), exc.status_code
-            infrastructure_id = registered["id"]
 
         # Get the NEST from the Slice Mapping process
         nest, error_code = slice_mapping.nest_mapping(data)
@@ -800,8 +817,7 @@ class SliceView(FlaskView):
 
         if deployment_runtime:
             nest["deployment_runtime"] = deployment_runtime
-        if infrastructure_id:
-            nest["infrastructure_id"] = infrastructure_id
+        nest["target_selection_version"] = "katana/v1"
 
         # Store the asynchronous request before returning its UUID so immediate
         # frontend polling sees Queued instead of a transient 404.

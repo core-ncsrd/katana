@@ -1,0 +1,23 @@
+api_version: katana/v1
+
+nfvos:
+  - id: osm-main
+    name: Main OSM
+    type: osm
+    endpoint: nbi.osm.example
+    project: admin
+    credentials_file: secrets/osm-main.yaml
+    tls_verify: true
+
+vims:
+  - id: core-openstack
+    name: Core OpenStack
+    type: openstack
+    location: core
+    cloud: katana
+    credentials_file: secrets/clouds.yaml
+    nfvos:
+      - id: osm-main
+        account_name: katana-osm-main-core-openstack
+        config:
+          security_groups: default

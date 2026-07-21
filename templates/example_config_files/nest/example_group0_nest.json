@@ -19,5 +19,16 @@
         },
         "mtu": 1500
     },
-    "service_descriptor": {}
+    "service_descriptor": {
+        "ns_list": [
+            {
+                "nsd-id": "3509ebfe-bd74-43a7-9fa3-89b901b8e678",
+                "ns-name": "demo_nsd",
+                "nfvo-id": "osm-main",
+                "target": "core-openstack",
+                "placement": "core",
+                "optional": false
+            }
+        ]
+    }
 }

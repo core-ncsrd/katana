@@ -37,9 +37,16 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "$dock_copy" = true ]; then
-    docker cp "${FILE}" katana-cli:/katana-cli/"$file_name"
     file_name=${FILE##*/}
-    docker container exec -it katana-cli katana "${POSITIONAL[@]}" "$file_name"
+    if [[ "${POSITIONAL[0]}" == "bootstrap" ]]; then
+        config_dir="$(cd "$(dirname "${FILE}")" && pwd)"
+        docker container exec katana-cli mkdir -p /tmp/katana-bootstrap
+        docker cp "${config_dir}/." katana-cli:/tmp/katana-bootstrap/
+        docker container exec -it katana-cli katana "${POSITIONAL[@]}" "/tmp/katana-bootstrap/${file_name}"
+    else
+        docker cp "${FILE}" katana-cli:/katana-cli/"${file_name}"
+        docker container exec -it katana-cli katana "${POSITIONAL[@]}" "${file_name}"
+    fi
 else
     docker container exec -it katana-cli katana "${POSITIONAL[@]}"
-fi  
+fi

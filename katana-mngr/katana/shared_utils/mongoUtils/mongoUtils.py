@@ -15,6 +15,9 @@ db.nsd.create_index([("nsd-id", ASCENDING)], unique=True)
 db.vnfd.create_index([("vnfd-id", ASCENDING)], unique=True)
 db.func.create_index([("id", ASCENDING)], unique=True)
 db.location.create_index([("id", ASCENDING)], unique=True)
+db.nfvo_vim_links.create_index(
+    [("nfvo_id", ASCENDING), ("vim_id", ASCENDING)], unique=True
+)
 
 
 def index(collection_name):

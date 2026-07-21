@@ -2126,11 +2126,18 @@
       }
     },
     "/bootstrap": {
+      "get": {
+        "tags": ["Bootstrap Katana"],
+        "summary": "Return the latest Time-0 bootstrap result",
+        "responses": {
+          "200": {"description": "Bootstrap status"}
+        }
+      },
       "post": {
         "tags": [
           "Bootstrap Katana"
         ],
-        "summary": "Configure Katana using one JSON File. Note that the locations must be already added.",
+        "summary": "Idempotently reconcile OSM, OpenStack VIMs, and their persistent links",
         "requestBody": {
           "description": "Configuration Data",
           "content": {
@@ -2149,6 +2156,14 @@
           },
           "500": {
             "description": "Internal Server Error",
+            "content": {}
+          },
+          "409": {
+            "description": "Conflicting configuration or bootstrap already running",
+            "content": {}
+          },
+          "502": {
+            "description": "OSM or OpenStack validation failed",
             "content": {}
           }
         }
@@ -4054,44 +4069,28 @@
       },
       "bootstrap": {
         "type": "object",
-        "description": "Katana configuration data",
+        "description": "Resolved Katana Time-0 configuration data",
         "properties": {
-          "vim": {
+          "api_version": {
+            "type": "string",
+            "enum": ["katana/v1"]
+          },
+          "vims": {
             "type": "array",
-            "description": "A list with the VIM components to be added",
+            "description": "OpenStack VIMs with credentials and NFVO link definitions",
             "items": {
-              "$ref": "#/components/schemas/vim"
+              "type": "object"
             }
           },
-          "nfvo": {
+          "nfvos": {
             "type": "array",
-            "description": "A list with the NFVO components to be added",
+            "description": "OSM NFVOs with resolved credentials",
             "items": {
-              "$ref": "#/components/schemas/nfvo"
-            }
-          },
-          "wim": {
-            "type": "array",
-            "description": "A list with the WIM components to be added",
-            "items": {
-              "$ref": "#/components/schemas/wim"
-            }
-          },
-          "ems": {
-            "type": "array",
-            "description": "A list with the EMS components to be added",
-            "items": {
-              "$ref": "#/components/schemas/ems"
-            }
-          },
-          "function": {
-            "type": "array",
-            "description": "A list with the Network Functions to be added",
-            "items": {
-              "$ref": "#/components/schemas/net_func"
+              "type": "object"
             }
           }
-        }
+        },
+        "required": ["api_version", "nfvos", "vims"]
       },
       "location_descriptor": {
         "type": "object",

@@ -99,7 +99,7 @@ class SliceConfigTests(unittest.TestCase):
         data = {"base_slice_descriptor": {}}
         self.assertIs(self.prepare(data, "/tmp/slice.yaml"), data)
 
-    def test_relative_kubeconfig_is_loaded_for_transport(self):
+    def test_inline_kubernetes_registration_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             credential_path = Path(directory) / "creds.json"
             credential_path.write_text(
@@ -111,13 +111,10 @@ class SliceConfigTests(unittest.TestCase):
                     "credentials_file": "creds.json",
                 }
             }
-            prepared = self.prepare(data, str(Path(directory) / "slice.yaml"))
+            with self.assertRaises(ClickStub.ClickException):
+                self.prepare(data, str(Path(directory) / "slice.yaml"))
 
-        self.assertNotIn("credentials_file", prepared["infrastructure"])
-        self.assertIn("credentials", prepared["infrastructure"])
-        self.assertNotIn("credentials", data["infrastructure"])
-
-    def test_openstack_requires_cloud_name_when_file_has_multiple_clouds(self):
+    def test_inline_openstack_registration_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             credential_path = Path(directory) / "clouds.json"
             credential_path.write_text(json.dumps({"clouds": {"one": {}, "two": {}}}))
@@ -131,21 +128,6 @@ class SliceConfigTests(unittest.TestCase):
                 self.prepare(data, str(Path(directory) / "slice.yaml"))
 
 
-class RequestIsolationTests(unittest.TestCase):
-    def test_infrastructure_is_removed_without_mutating_request(self):
-        namespace = load_definitions(
-            "katana-nbi/katana/api/slice.py", {"split_infrastructure"}
-        )
-        original = {
-            "infrastructure": {"credentials": {"secret": "value"}},
-            "base_slice_descriptor": {},
-        }
-        clean, infrastructure = namespace["split_infrastructure"](original)
-        self.assertNotIn("infrastructure", clean)
-        self.assertIn("infrastructure", original)
-        self.assertEqual(infrastructure["credentials"]["secret"], "value")
-
-
 class AsyncSliceCreationTests(unittest.TestCase):
     def test_queued_record_is_immediately_readable(self):
         namespace = load_definitions(
@@ -157,6 +139,7 @@ class AsyncSliceCreationTests(unittest.TestCase):
             "_id": "slice-1",
             "slice_name": "frontend-test",
             "ns_list": [{"nsd-id": "nsd-1"}],
+            "target_selection_version": "katana/v1",
         }
 
         record = namespace["queued_slice_record"](nest)
@@ -164,6 +147,7 @@ class AsyncSliceCreationTests(unittest.TestCase):
         self.assertEqual(record["status"], "Queued")
         self.assertEqual(record["slice_name"], "frontend-test")
         self.assertEqual(record["runtime_errors"], {})
+        self.assertEqual(record["target_selection_version"], "katana/v1")
         self.assertIn("Placement_Time", record["deployment_time"])
 
     def test_manager_replaces_existing_queued_record(self):
@@ -365,6 +349,10 @@ class OsmAuthenticationRetryTests(unittest.TestCase):
         self.assertTrue(
             all(call["timeout"] == 20 for call in requests_stub.call_kwargs)
         )
+        self.assertEqual(
+            requests_stub.call_kwargs[-1]["json"],
+            {"username": "user", "password": "password", "project_id": "admin"},
+        )
 
     def test_authentication_failure_is_explicit_after_three_attempts(self):
         failures = [
@@ -413,6 +401,54 @@ class OsmAuthenticationRetryTests(unittest.TestCase):
             "OSM VIM registration timed out after 30 seconds",
         )
 
+    def test_vim_registration_uses_distinct_account_and_tenant_names(self):
+        osm, requests_stub, _, _ = self._osm(
+            [self.ResponseStub({"id": "vim-account"})]
+        )
+        osm.token = "token"
+
+        osm.addVim(
+            "katana-link",
+            "secret",
+            "openstack",
+            "https://openstack/v3",
+            "katana",
+            {"security_groups": "default"},
+            vimTenantName="katana-project",
+        )
+
+        payload = requests_stub.call_kwargs[-1]["json"]
+        self.assertEqual(payload["name"], "katana-link")
+        self.assertEqual(payload["vim_tenant_name"], "katana-project")
+        self.assertTrue(requests_stub.call_kwargs[-1]["verify"])
+
+    def test_vim_readiness_failure_is_explicit(self):
+        osm, _, _, error_type = self._osm([])
+        osm.getVim = lambda vim_id: {
+            "_id": vim_id,
+            "_admin": {
+                "operationalState": "FAILED",
+                "detailed-status": "authentication rejected",
+            },
+        }
+
+        with self.assertRaises(error_type) as raised:
+            osm.waitForVim("vim-account", attempts=1, interval=0)
+
+        self.assertIn("authentication rejected", str(raised.exception))
+
+    def test_vim_readiness_timeout_is_bounded(self):
+        osm, _, _, error_type = self._osm([])
+        osm.getVim = lambda vim_id: {
+            "_id": vim_id,
+            "_admin": {"operationalState": "PROCESSING"},
+        }
+
+        with self.assertRaises(error_type) as raised:
+            osm.waitForVim("vim-account", attempts=2, interval=0)
+
+        self.assertIn("did not become ready", str(raised.exception))
+
 
 class SliceFailureTests(unittest.TestCase):
     class LoggerStub:
@@ -442,6 +478,41 @@ class SliceFailureTests(unittest.TestCase):
 
 
 class OpenStackTenantCredentialTests(unittest.TestCase):
+    def test_openstack_constructor_honors_tls_verification(self):
+        captured = {}
+
+        class ConnectionStub:
+            @staticmethod
+            def authorize():
+                return None
+
+        class OpenstackModuleStub:
+            @staticmethod
+            def connect(**kwargs):
+                captured.update(kwargs)
+                return ConnectionStub()
+
+        namespace = load_definitions(
+            "katana-mngr/katana/shared_utils/vimUtils/openstackUtils.py",
+            {"timeout", "Openstack"},
+            {
+                "functools": __import__("functools"),
+                "Process": object,
+                "openstack": OpenstackModuleStub,
+            },
+        )
+
+        namespace["Openstack"](
+            "vim-1",
+            "https://openstack/v3",
+            "project",
+            "user",
+            "secret",
+            verify="/bootstrap/ca.pem",
+        )
+
+        self.assertEqual(captured["verify"], "/bootstrap/ca.pem")
+
     def test_slice_credentials_are_unique_and_not_hardcoded(self):
         namespace = load_definitions(
             "katana-mngr/katana/utils/sliceUtils/sliceUtils.py",
@@ -568,6 +639,7 @@ class TargetResolutionTests(unittest.TestCase):
             {
                 "_deployment_target",
                 "_requested_nfvo_id",
+                "nfvo_vim_link",
                 "resolve_deployment_target",
             },
             {"mongoUtils": MongoStub(collections)},
@@ -575,9 +647,13 @@ class TargetResolutionTests(unittest.TestCase):
         return namespace["resolve_deployment_target"]
 
     def _ns(self, runtime="kubernetes"):
-        return {"nsd-info": {"deployment_runtime": runtime, "nfvo_id": "osm-1"}}
+        return {
+            "nsd-info": {"deployment_runtime": runtime, "nfvo_id": "osm-1"},
+            "nfvo-id": "osm-1",
+            "target": "edge-k8s",
+        }
 
-    def test_single_compatible_target_is_selected(self):
+    def test_explicit_compatible_target_is_selected(self):
         target = {
             "id": "edge-k8s",
             "type": "kubernetes",
@@ -588,29 +664,29 @@ class TargetResolutionTests(unittest.TestCase):
         self.assertIs(selected, target)
         self.assertIsNone(error)
 
-    def test_ambiguous_targets_fail(self):
-        targets = [
-            {"id": name, "type": "kubernetes", "location": "edge", "nfvo_id": "osm-1"}
-            for name in ("one", "two")
-        ]
-        selected, error = self._resolver({"k8sclusters": targets})(self._ns(), "edge")
+    def test_missing_explicit_target_fails(self):
+        ns = self._ns()
+        del ns["target"]
+        selected, error = self._resolver({})(ns, "edge")
         self.assertIsNone(selected)
-        self.assertIn("Multiple kubernetes", error)
+        self.assertIn("requires target", error)
 
     def test_missing_target_fails_explicitly(self):
         selected, error = self._resolver({})(self._ns(), "edge")
         self.assertIsNone(selected)
-        self.assertIn("No kubernetes infrastructure", error)
+        self.assertIn("edge-k8s not found", error)
 
-    def test_preferred_target_wins(self):
+    def test_preferred_target_does_not_override_explicit_target(self):
         targets = [
             {"id": name, "type": "kubernetes", "location": "edge", "nfvo_id": "osm-1"}
             for name in ("one", "two")
         ]
+        ns = self._ns()
+        ns["target"] = "one"
         selected, error = self._resolver({"k8sclusters": targets})(
-            self._ns(), "edge", preferred_target_id="two"
+            ns, "edge", preferred_target_id="two"
         )
-        self.assertEqual(selected["id"], "two")
+        self.assertEqual(selected["id"], "one")
         self.assertIsNone(error)
 
     def test_explicit_nfvo_overrides_mutable_nsd_owner(self):
@@ -624,18 +700,25 @@ class TargetResolutionTests(unittest.TestCase):
         ns["nfvo-id"] = "osm-selected"
         ns["target"] = "core-openstack"
 
-        selected, error = self._resolver({"vim": [target]})(ns, "core")
+        selected, error = self._resolver(
+            {
+                "vim": [target],
+                "nfvo_vim_links": [
+                    {"nfvo_id": "osm-selected", "vim_id": "core-openstack"}
+                ],
+            }
+        )(ns, "core")
 
         self.assertIs(selected, target)
         self.assertIsNone(error)
 
 
-class ExistingOsmVimAccountTests(unittest.TestCase):
+class TimeZeroOsmVimAccountTests(unittest.TestCase):
     class LoggerStub:
         def error(self, *args):
             pass
 
-    def test_existing_account_is_marked_persistent_for_provisioning(self):
+    def test_bootstrapped_account_is_marked_persistent_for_provisioning(self):
         nsd = {
             "nsd-id": "nsd-1",
             "nfvo_id": "osm-bootstrap-owner",
@@ -657,12 +740,25 @@ class ExistingOsmVimAccountTests(unittest.TestCase):
             {
                 "_deployment_target",
                 "_requested_nfvo_id",
-                "_existing_osm_vim_account",
+                "nfvo_vim_link",
+                "persistent_vim_account",
                 "resolve_deployment_target",
                 "ns_details",
             },
             {
-                "mongoUtils": MongoStub({"nsd": [nsd], "vim": [target]}),
+                "mongoUtils": MongoStub(
+                    {
+                        "nsd": [nsd],
+                        "vim": [target],
+                        "nfvo_vim_links": [
+                            {
+                                "nfvo_id": "osm-selected",
+                                "vim_id": "core-openstack",
+                                "osm_vim_account_id": "account-1",
+                            }
+                        ],
+                    }
+                ),
                 "copy": __import__("copy"),
                 "uuid": uuid,
                 "logger": self.LoggerStub(),
@@ -679,7 +775,6 @@ class ExistingOsmVimAccountTests(unittest.TestCase):
                     "placement": "core",
                     "target": "core-openstack",
                     "nfvo-id": "osm-selected",
-                    "osm-vim-account-id": "account-1",
                 }
             ],
             "core",

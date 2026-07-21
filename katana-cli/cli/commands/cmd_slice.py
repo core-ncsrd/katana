@@ -1,6 +1,5 @@
 import requests
 import json
-import os
 import yaml
 
 import click
@@ -8,57 +7,14 @@ import datetime
 
 
 def prepare_slice_data(data, slice_file):
-    """Resolve an optional infrastructure credential file for API transport."""
+    """Reject infrastructure registration at the slice boundary."""
     if not isinstance(data, dict):
         raise click.ClickException("Slice file must contain a YAML object")
-
-    infrastructure = data.get("infrastructure")
-    if infrastructure is None:
-        return data
-    if not isinstance(infrastructure, dict):
-        raise click.ClickException("Field infrastructure must be a YAML object")
-
-    prepared = dict(data)
-    infrastructure = dict(infrastructure)
-    prepared["infrastructure"] = infrastructure
-    credentials_file = infrastructure.pop("credentials_file", None)
-    if not credentials_file:
-        return prepared
-
-    credentials_path = os.path.join(os.path.dirname(os.path.abspath(slice_file)), credentials_file)
-    try:
-        with open(credentials_path, mode="r") as stream:
-            credentials = yaml.safe_load(stream)
-    except FileNotFoundError:
-        raise click.ClickException(f"Credentials file {credentials_file} not found")
-    except yaml.YAMLError as exc:
-        raise click.ClickException(f"Error parsing credentials file: {exc}")
-
-    if not isinstance(credentials, dict):
-        raise click.ClickException("Credentials file must contain a YAML object")
-    infrastructure_type = str(infrastructure.get("type", "")).lower()
-    if infrastructure_type == "kubernetes":
-        missing = [key for key in ("clusters", "contexts", "users") if not credentials.get(key)]
-        if missing:
-            raise click.ClickException(
-                "Invalid kubeconfig; missing: " + ", ".join(missing)
-            )
-    elif infrastructure_type == "openstack":
-        clouds = credentials.get("clouds")
-        if not isinstance(clouds, dict) or not clouds:
-            raise click.ClickException("OpenStack credentials must be a clouds.yaml file")
-        cloud_name = infrastructure.get("cloud")
-        if cloud_name and cloud_name not in clouds:
-            raise click.ClickException(f"OpenStack cloud {cloud_name} was not found")
-        if not cloud_name and len(clouds) != 1:
-            raise click.ClickException(
-                "Field infrastructure.cloud is required when clouds.yaml has multiple clouds"
-            )
-    else:
-        raise click.ClickException("Infrastructure type must be openstack or kubernetes")
-
-    infrastructure["credentials"] = credentials
-    return prepared
+    if "infrastructure" in data:
+        raise click.ClickException(
+            "Infrastructure must be registered with Time-0 bootstrap, not slice YAML"
+        )
+    return data
 
 
 @click.group()

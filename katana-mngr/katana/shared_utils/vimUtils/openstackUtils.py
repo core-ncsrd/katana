@@ -92,7 +92,7 @@ class Openstack:
             password=password,
             user_domain_name="Default",
             project_domain_name="default",
-            verify=False  # Explicitly specify verify=False
+            verify=verify,
         )
         try:
             conn.authorize()
@@ -311,6 +311,7 @@ class Openstack:
             password=self.password,
             user_domain_name=self.user_domain_name,
             project_domain_name=self.project_domain_name,
+            verify=self.verify,
         )
         self.openstack_authorize(conn)
 

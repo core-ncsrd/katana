@@ -59,7 +59,7 @@ go inside the project and run:
 Deploy katana Slice Manager service. The script will attempt to pull the defined Docker tag from the defined Docker registry/repository. Otherwise, it will build the images using the ":test" tag.
 
 ``` bash
-bash bin/deploy.sh [-p | --publish] [-r | --release <RELEASE_NUMBER>] [--docker_reg <REMOTE_DOCKER_REGISTRY>] [--docker_repo <DOCKER_REPOSITORY>] [--docker_reg_user <REGISTRY_USER>] [--docker_reg_passwd <REGISTRY_PASSWORD>] [-m | --monitoring] [--no-build] [--apex] [-h | --help]
+bash bin/deploy.sh --bootstrap-config /path/to/bootstrap.yaml [other options]
 ```
 
 Options:
@@ -73,6 +73,8 @@ Options:
 - __[-m | --monitoring] :__ Start Katana Slice Manager Slice Monitoring module
 - __[--no_build] :__ Try to download Docker images, but do not build them
 - __[--apex] :__ Initiate the APEX Policy Engine
+- __[--bootstrap-config FILE] :__ Run the required Time-0 infrastructure reconciliation.
+- __[--skip-bootstrap] :__ Skip reconciliation only for an already-configured installation.
 - __[-h | --help] :__ Print help message and quit
 ## Logs
 
@@ -125,80 +127,39 @@ To Uninstall Katana Slice Manager run the following:
 
 **We assume that an OSM 16 and a K8s/MicroK8s cluster or Openstack have been installed and configured properly and that the user has already uploaded an nsd/vnfd to osm**
 
-### Registering NVFO to Katana
+### Time-0 infrastructure bootstrap
+
+NFVOs and OpenStack VIMs are installation configuration, not slice input. Copy
+`templates/example_config_files/bootstrap`, replace the example credentials,
+and deploy with the versioned manifest:
+
 ```bash
-sudo katana nfvo add -f osm.json
+bash bin/deploy.sh --bootstrap-config /path/to/bootstrap/bootstrap.yaml
 ```
-with this command we register our osm the format of the json is the following
 
-```json
-{
-  "id": "<Give id>",
-  "name": "<Give a name>",
-  "nfvoip": "nbi.<ip of OSM>.nip.io",
-  "nfvousername": "admin",
-  "nfvopassword": "admin",
-  "tenantname": "admin",
-  "type": "OSM",
-  "version": "",
-  "description": "string",
-  "config": [
-    {
-      "id": "0",
-      "nfvousername": "admin",
-      "nfvopassword": "admin",
-      "nfvoip": "nbi.<ip of OSM>.nip.io",
-      "tenantname": "admin"
-    }
-  ]
-}
-```
-### Registering location to Katana
+The one-shot job validates OSM and OpenStack, creates or adopts the configured
+OSM VIM accounts, stores their NFVO-VIM links, and exits. Rerunning the same
+manifest is safe and never deletes entries omitted from the file. Existing
+configured installations may explicitly use `--skip-bootstrap` during upgrade.
+
+The same reconciliation can be run later with:
+
 ```bash
-sudo katana location add -f location.json
-```
-with this command we register the location of a vim the format of the json is the following
-
-```json
-{
-
-"id": "group0_edge",
-
-"description": "Group 0 Edge location"
-
-}
-```
-### Registering a VIM to Katana
-```bash
-sudo katana vim add -f vim.json
+katana bootstrap -f /path/to/bootstrap/bootstrap.yaml
 ```
 
-Running this will register a vim to katana json format is below
-
-```json
-{
-  "id": "vim_core2",
-  "name": "vim_Core2",
-  "auth_url": "http://<IP of the openstack>:5000/v3/",
-  "username": "admin",
-  "password": "<password given by openstack>",
-  "admin_project_name": "admin",
-  "location": "<Should be the same as the location id>",
-  "type": "openstack",
-  "version": "2024.1/stable",
-  "description": "Group 0 VIM",
-  "infrastructure_monitoring": "http://<IP of the openstack>:9093/metrics",
-  "config": {
-    "security_groups": "TBA"
-  }
-}
-```
+Credential paths are relative to the manifest. Keep the credential files out of
+source control. OpenStack credentials use the standard `clouds.yaml` format.
+When a custom CA is configured, rerun the CLI with a manifest from the same
+directory mounted during deployment so the NBI and manager can resolve it.
 
 ### Adding network function to Katana
 ```bash
 sudo katana function add -f function.json
 ```
-the network function json should look like this
+The network function JSON can retain its legacy `ns_list` metadata for mapping.
+For Time-0 slices it does not trigger deployment; the slice
+`service_descriptor.ns_list` below is the authoritative deployment list.
 
 ```json
 {
@@ -228,56 +189,9 @@ the network function json should look like this
 sudo katana slice add -f slice.json
 ```
 
-Katana can also register missing OpenStack or Kubernetes infrastructure from the
-same slice YAML. The NFVO must already be registered. Credential paths are
-resolved relative to the slice file and are not stored with the slice.
-
-Kubernetes example:
-
-```yaml
-infrastructure:
-  id: edge-k8s-1
-  type: kubernetes
-  location: group0_edge
-  nfvo_id: osm-1
-  credentials_file: ./creds.yaml
-  k8s_version: v1.30.7
-
-base_slice_descriptor:
-  base_slice_des_id: open5gs-slice
-  coverage: [group0_edge]
-  delay_tolerance: true
-  network_DL_throughput:
-    guaranteed: 1500000
-
-service_descriptor:
-  ns_list:
-    - nsd-id: <ID of a KNF/KDU NSD uploaded to OSM>
-      ns-name: open5gs
-      placement: group0_edge
-```
-
-OpenStack uses a standard `clouds.yaml` file:
-
-```yaml
-infrastructure:
-  id: core-openstack-1
-  type: openstack
-  location: core
-  nfvo_id: osm-1
-  credentials_file: ./clouds.yaml
-  cloud: katana
-```
-
-If `infrastructure` is omitted, Katana selects the single compatible registered
-target for the NSD platform, placement location, and NFVO. If no target or more
-than one target matches, slice creation fails explicitly; provide an
-`infrastructure` section to make the choice unambiguous.
-
-To instantiate a new NS through an existing persistent OSM VIM account, pin all
-three identifiers on the NS. Katana reuses the account and its OpenStack project
-and does not delete either when the new slice is removed. The original project
-must remain available while any NS uses that OSM account:
+Every network service must select the registered NFVO and VIM explicitly.
+Katana resolves the persistent OSM account from the bootstrapped link; callers
+must not provide credentials or an `osm-vim-account-id` in slice YAML:
 
 ```yaml
 service_descriptor:
@@ -286,7 +200,6 @@ service_descriptor:
       ns-name: <new NS instance name>
       nfvo-id: <registered Katana NFVO ID>
       target: <registered Katana OpenStack infrastructure ID>
-      osm-vim-account-id: <existing OSM VIM account UUID>
       placement: core
 ```
 

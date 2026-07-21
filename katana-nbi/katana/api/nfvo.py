@@ -14,6 +14,7 @@ from requests import ConnectTimeout, ConnectionError  # type: ignore
 
 from katana.shared_utils.mongoUtils import mongoUtils
 from katana.shared_utils.nfvoUtils import osmUtils
+from katana.shared_utils.bootstrapUtils import BootstrapError, _ensure_nfvo, public_record
 
 # Logging Parameters
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class NFVOView(FlaskView):
         """
         Same with index(self) above, but returns all nfvo details
         """
-        return dumps(mongoUtils.index("nfvo")), 200
+        return dumps([public_record(item) for item in mongoUtils.index("nfvo")]), 200
 
     def get(self, uuid):
         """
@@ -57,7 +58,7 @@ class NFVOView(FlaskView):
         """
         data = mongoUtils.get("nfvo", uuid)
         if data:
-            return dumps(data), 200
+            return dumps(public_record(data)), 200
         else:
             return "Not Found", 404
 
@@ -66,48 +67,29 @@ class NFVOView(FlaskView):
         Add a new nfvo. The request must provide the nfvo details.
         used by: `katana nfvo add -f [file]`
         """
-        new_uuid = str(uuid.uuid4())
-        request.json["_id"] = new_uuid
-        request.json["created_at"] = time.time()  # unix epoch
-        request.json["tenants"] = {}
-
-        if request.json["type"] == "OSM":
-            # Create the NFVO object
-            try:
-                osm_username = request.json["nfvousername"]
-                osm_password = request.json["nfvopassword"]
-                osm_ip = request.json["nfvoip"]
-                osm_project_name = request.json["tenantname"]
-                nfvo_id = request.json["id"]
-            except KeyError:
-                return f"Error: Required fields: {self.req_fields}", 400
-            else:
-                osm = osmUtils.Osm(nfvo_id, osm_ip, osm_username, osm_password, osm_project_name)
-            try:
-                osm.getToken()
-            except ConnectTimeout as e:
-                logger.exception(f"Connection Timeout: {e}")
-                response = dumps({"error": "Unable to connect to NFVO"})
-                return (response, 400)
-            except ConnectionError as e:
-                logger.exception(f"Connection Error: {e}")
-                response = dumps({"error": "Unable to connect to NFVO"})
-                return (response, 400)
-            else:
-                # Store the osm object to the mongo db
-                thebytes = pickle.dumps(osm)
-                obj_json = {"_id": new_uuid, "id": request.json["id"], "obj": Binary(thebytes)}
-                try:
-                    new_uuid = mongoUtils.add("nfvo", request.json)
-                except pymongo.errors.DuplicateKeyError:
-                    return f"NFVO with id {nfvo_id} already exists", 400
-                mongoUtils.add("nfvo_obj", obj_json)
-                # Get information regarding VNFDs and NSDs
-                osm.bootstrapNfvo()
-                return new_uuid, 201
-        else:
-            response = dumps({"error": "This type nfvo is not supported"})
-            return response, 400
+        data = request.get_json(silent=True) or {}
+        try:
+            record, client, action = _ensure_nfvo(
+                {
+                    "id": data["id"],
+                    "name": data.get("name", data["id"]),
+                    "type": data["type"],
+                    "endpoint": data["nfvoip"],
+                    "project": data["tenantname"],
+                    "credentials": {
+                        "username": data["nfvousername"],
+                        "password": data["nfvopassword"],
+                    },
+                    "tls_verify": data.get("tls_verify", True),
+                    "ca_file": data.get("ca_file"),
+                }
+            )
+            client.bootstrapNfvo()
+        except KeyError:
+            return f"Error: Required fields: {self.req_fields}", 400
+        except BootstrapError as exc:
+            return str(exc), exc.status_code
+        return record["_id"], 201 if action == "created" else 200
 
     def delete(self, uuid):
         """
@@ -116,6 +98,8 @@ class NFVOView(FlaskView):
         """
         del_nfvo = mongoUtils.get("nfvo", uuid)
         if del_nfvo:
+            if mongoUtils.find("nfvo_vim_links", {"nfvo_id": del_nfvo["id"]}):
+                return f"Cannot delete NFVO {uuid} - linked by Time-0 bootstrap", 400
             if del_nfvo["tenants"]:
                 return f"Cannot delete nfvo {uuid} - In use", 400
             mongoUtils.delete("nfvo_obj", uuid)

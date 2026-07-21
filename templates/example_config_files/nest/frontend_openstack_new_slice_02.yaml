@@ -1,5 +1,4 @@
-# Reuse the registered Katana NFVO and OpenStack infrastructure. Katana creates
-# a fresh slice project and temporary OSM VIM account for this new NS instance.
+# Reuse the persistent NFVO-VIM link created by Time-0 bootstrap.
 base_slice_descriptor:
   base_slice_des_id: frontend_openstack_new_slice_02
   coverage:

@@ -6,6 +6,11 @@ services:
     volumes:
       - "katana-mongo-datadb:/data/db"
       - "katana-mongo-configdb:/data/configdb"
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   zookeeper:
     image: confluentinc/cp-zookeeper:5.4.2
@@ -54,6 +59,7 @@ services:
     command: gunicorn -b 0.0.0.0:8000 --workers 3 --timeout 600 --access-logfile - --reload "katana.app:create_app()"
     volumes:
       - "katana-prom-targets:/targets"
+      - "${KATANA_BOOTSTRAP_DIR:-./templates/example_config_files/bootstrap}:/bootstrap:ro"
     ports:
       - "8000:8000"
     environment:
@@ -74,6 +80,7 @@ services:
     command: python3 katana/katana-mngr.py
     volumes:
       - "katana-grafana-templates:/katana-grafana/templates"
+      - "${KATANA_BOOTSTRAP_DIR:-./templates/example_config_files/bootstrap}:/bootstrap:ro"
     environment:
       KATANA_MONITORING: ${KATANA_MONITORING:-}
       APEX: ${APEX:-}
@@ -84,6 +91,26 @@ services:
     depends_on:
       - katana-nbi
       - mongo
+
+  katana-bootstrap:
+    image: "${DOCKER_REG:-}${DOCKER_REPO:-}katana-nbi:${DOCKER_TAG:-test}"
+    build:
+      context: .
+      dockerfile: katana-nbi/Dockerfile
+    command:
+      - python3
+      - -m
+      - katana.bootstrap
+      - --manifest
+      - /bootstrap/${KATANA_BOOTSTRAP_MANIFEST:-bootstrap.yaml}
+    volumes:
+      - "${KATANA_BOOTSTRAP_DIR:-./templates/example_config_files/bootstrap}:/bootstrap:ro"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    profiles:
+      - bootstrap
+    restart: "no"
 
   katana-cli:
     image: "${DOCKER_REG:-}${DOCKER_REPO:-}katana-cli:${DOCKER_TAG:-test}"
@@ -173,6 +200,8 @@ services:
     command: python katana/exporter.py
     ports:
       - "8002:8002"
+    volumes:
+      - "${KATANA_BOOTSTRAP_DIR:-./templates/example_config_files/bootstrap}:/bootstrap:ro"
     depends_on:
       - katana-mngr
       - katana-grafana
